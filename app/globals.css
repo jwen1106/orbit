@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-orbit-offwhite text-orbit-dark font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+}
+
+@layer components {
+  .orbit-card {
+    @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+  }
+
+  .orbit-nav {
+    @apply bg-orbit-forest text-white;
+  }
+
+  .orbit-badge-short {
+    @apply bg-orbit-amber text-white text-xs font-bold px-2 py-0.5 rounded;
+  }
+
+  .orbit-badge-long {
+    @apply bg-orbit-forest text-white text-xs font-bold px-2 py-0.5 rounded;
+  }
+
+  .orbit-score {
+    @apply text-orbit-forest font-bold;
+  }
+
+  .table-row-hover {
+    @apply hover:bg-green-50 transition-colors;
+  }
+}

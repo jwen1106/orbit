@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'oaklin_admin';
+    }
+
+    function isManager() {
+      return isSignedIn() && request.auth.token.role == 'team_manager';
+    }
+
+    function userOrg() {
+      return request.auth.token.organisationId;
+    }
+
+    // ── users ──────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow write: if isAdmin();
+    }
+
+    // ── organisations ──────────────────────────────────────────────────────
+    match /organisations/{orgId} {
+      allow read: if isAdmin() || (isManager() && userOrg() == orgId);
+      allow write: if isAdmin();
+    }
+
+    // ── teams ──────────────────────────────────────────────────────────────
+    match /teams/{teamId} {
+      allow read: if isAdmin() || (isManager() && resource.data.managerId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // ── engagements ────────────────────────────────────────────────────────
+    match /engagements/{engagementId} {
+      allow read: if isAdmin() || (isManager() && resource.data.teamId in getManagerTeamIds());
+      allow write: if isAdmin();
+
+      // Respondents: no direct client read/write — all via server-side API routes
+      match /respondents/{respondentId} {
+        allow read, write: if isAdmin();
+
+        match /responses/{questionId} {
+          allow read: if isAdmin();
+          // Survey writes use the server-side API, not direct client writes
+          allow write: if false;
+        }
+      }
+    }
+
+    // ── questions ──────────────────────────────────────────────────────────
+    match /questions/{questionId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── insights ───────────────────────────────────────────────────────────
+    match /insights/{engagementId} {
+      allow read: if isAdmin() || (isManager() && resource.data.teamId in getManagerTeamIds());
+      allow write: if isAdmin();
+    }
+
+    // ── actionItems ────────────────────────────────────────────────────────
+    match /actionItems/{itemId} {
+      allow read: if isAdmin() || (isManager() && resource.data.teamId in getManagerTeamIds());
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isManager()
+        && resource.data.teamId in getManagerTeamIds()
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'assignedTo', 'dueDate', 'updatedAt'])
+      );
+    }
+
+    // ── benchmarks ─────────────────────────────────────────────────────────
+    match /benchmarks/{benchmarkId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Helper function — note: Firestore rules don't support async lookups,
+    // so managers must have teamId in their custom claims for real-time security.
+    // The function below is a placeholder for documentation purposes.
+    // Actual team-scoping is enforced at the application layer (lib/auth.ts).
+    function getManagerTeamIds() {
+      // In production, set teamId as a custom claim on manager accounts
+      // and use: return [request.auth.token.teamId]
+      return [];
+    }
+  }
+}
