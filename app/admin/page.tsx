@@ -267,7 +267,7 @@ export default async function AdminDashboard() {
                       </Link>
                     </td>
                     <td className="px-6 py-3">
-                      {eng.status === 'analysed' ? (
+                      {eng.status !== 'draft' ? (
                         <a
                           href={`/api/admin/export/${eng.id}`}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-orbit-forest text-white hover:bg-orbit-green transition-colors"
