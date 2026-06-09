@@ -3,7 +3,6 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Link from 'next/link';
 import type { Engagement, Team, Organisation } from '@/types';
-import AdminCsvExport from '@/components/admin/AdminCsvExport';
 
 async function getDashboardData() {
   // Fetch all collections without orderBy to avoid index requirements
@@ -80,7 +79,7 @@ async function getDashboardData() {
 }
 
 export default async function AdminDashboard() {
-  const { orgs, teams, engagements, stats } = await getDashboardData();
+  const { engagements, stats } = await getDashboardData();
 
   const quickLinks = [
     { href: '/admin/organisations/new', label: 'New Organisation', icon: '🏢' },
@@ -132,9 +131,6 @@ export default async function AdminDashboard() {
           ))}
         </div>
       </div>
-
-      {/* CSV Export */}
-      <AdminCsvExport orgs={orgs} teams={teams} />
 
       {/* Engagements table */}
       <div>
@@ -198,9 +194,13 @@ export default async function AdminDashboard() {
                       {eng.status === 'analysed' ? (
                         <a
                           href={`/api/admin/export/${eng.id}`}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-orbit-forest hover:underline"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-orbit-forest text-white hover:bg-orbit-green transition-colors"
                         >
-                          ↓ CSV
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          Export CSV
                         </a>
                       ) : (
                         <span className="text-xs text-gray-300">—</span>
