@@ -23,13 +23,15 @@ async function getOrganisations(): Promise<OrgWithTeams[]> {
 
   const teamSnaps = await Promise.all(
     orgs.map((org) =>
-      adminDb.collection('teams').where('organisationId', '==', org.id).orderBy('name').get(),
+      adminDb.collection('teams').where('organisationId', '==', org.id).get(),
     ),
   );
 
   return orgs.map((org, i) => ({
     ...org,
-    teams: teamSnaps[i].docs.map((d) => ({ id: d.id, name: d.data().name ?? '—' })),
+    teams: teamSnaps[i].docs
+      .map((d) => ({ id: d.id, name: d.data().name ?? '—' }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
   }));
 }
 
