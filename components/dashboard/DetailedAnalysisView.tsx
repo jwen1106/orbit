@@ -471,32 +471,6 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
             </div>
           </div>
 
-          {/* Pillar scores quick strip */}
-          <div className="grid grid-cols-3 gap-3">
-            {COMPETENCIES.map((c) => {
-              const bd = competencyBreakdown.find((b) => b.competency === c);
-              const colors = COMPETENCY_COLORS[c];
-              return (
-                <div key={c} className={`rounded-lg border ${colors.border} ${colors.bg} px-4 py-3 flex items-center gap-3`}>
-                  <CompetencyIcon competency={c} size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-orbit-dark truncate">{COMPETENCY_LABELS[c]}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 h-1.5 bg-white/70 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${colors.border.replace('border-', 'bg-')}`}
-                          style={{ width: bd?.score != null ? `${(bd.score / 5) * 100}%` : '0%' }}
-                        />
-                      </div>
-                      <span className={`text-sm font-bold flex-shrink-0 ${colors.text}`}>
-                        {bd?.score?.toFixed(1) ?? '—'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
 
         {/* Right sidebar: Recommended actions */}
