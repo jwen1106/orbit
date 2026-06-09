@@ -54,9 +54,11 @@ export async function PATCH(
 ) {
   try {
     await requireAdmin(req);
-    const { title } = await req.json();
+    const { title, organisationId, teamId } = await req.json();
     const updates: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
     if (title !== undefined) updates.title = title?.trim() || null;
+    if (organisationId) updates.organisationId = organisationId;
+    if (teamId) updates.teamId = teamId;
     await adminDb.collection('engagements').doc(params.id).update(updates);
     return NextResponse.json({ ok: true });
   } catch (err) {

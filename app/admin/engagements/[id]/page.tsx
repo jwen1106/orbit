@@ -40,6 +40,16 @@ export default function EngagementDetailPage() {
   const [titleDraft, setTitleDraft] = useState('');
   const [savingTitle, setSavingTitle] = useState(false);
 
+  // Org / team editing
+  const [editingDetails, setEditingDetails] = useState(false);
+  const [allOrgs, setAllOrgs] = useState<{ id: string; name: string; industry: string }[]>([]);
+  const [orgTeams, setOrgTeams] = useState<{ id: string; name: string }[]>([]);
+  const [draftOrgId, setDraftOrgId] = useState('');
+  const [draftTeamId, setDraftTeamId] = useState('');
+  const [loadingOrgs, setLoadingOrgs] = useState(false);
+  const [loadingOrgTeams, setLoadingOrgTeams] = useState(false);
+  const [savingDetails, setSavingDetails] = useState(false);
+
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
   const load = useCallback(async () => {
@@ -106,6 +116,54 @@ export default function EngagementDetailPage() {
     }
   }
 
+  async function openEditDetails() {
+    setDraftOrgId(data?.organisationId ?? '');
+    setDraftTeamId(data?.teamId ?? '');
+    setEditingDetails(true);
+    if (allOrgs.length === 0) {
+      setLoadingOrgs(true);
+      const res = await fetch('/api/admin/organisations');
+      if (res.ok) setAllOrgs(await res.json());
+      setLoadingOrgs(false);
+    }
+    if (data?.organisationId) {
+      setLoadingOrgTeams(true);
+      const res = await fetch(`/api/admin/teams?organisationId=${data.organisationId}`);
+      if (res.ok) setOrgTeams(await res.json());
+      setLoadingOrgTeams(false);
+    }
+  }
+
+  async function onDraftOrgChange(orgId: string) {
+    setDraftOrgId(orgId);
+    setDraftTeamId('');
+    setOrgTeams([]);
+    if (orgId) {
+      setLoadingOrgTeams(true);
+      const res = await fetch(`/api/admin/teams?organisationId=${orgId}`);
+      if (res.ok) setOrgTeams(await res.json());
+      setLoadingOrgTeams(false);
+    }
+  }
+
+  async function saveDetails() {
+    if (!draftOrgId || !draftTeamId) return;
+    setSavingDetails(true);
+    try {
+      const res = await fetch(`/api/admin/engagements/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organisationId: draftOrgId, teamId: draftTeamId }),
+      });
+      if (res.ok) {
+        await load();
+        setEditingDetails(false);
+      }
+    } finally {
+      setSavingDetails(false);
+    }
+  }
+
   async function saveTitle() {
     setSavingTitle(true);
     try {
@@ -159,9 +217,74 @@ export default function EngagementDetailPage() {
           <Link href="/admin/engagements" className="text-sm text-orbit-green hover:underline">
             ← Engagements
           </Link>
-          <h1 className="text-2xl font-bold text-orbit-dark mt-1">
-            {data.orgName} — {data.teamName}
-          </h1>
+          {editingDetails ? (
+            <div className="mt-2 p-4 rounded-xl border border-orbit-forest bg-white space-y-3 max-w-md">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Edit organisation &amp; team</p>
+
+              {/* Organisation select */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Organisation</label>
+                {loadingOrgs ? (
+                  <p className="text-xs text-gray-400">Loading…</p>
+                ) : (
+                  <select
+                    value={draftOrgId}
+                    onChange={(e) => onDraftOrgChange(e.target.value)}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+                  >
+                    <option value="">Select organisation…</option>
+                    {allOrgs.map((o) => (
+                      <option key={o.id} value={o.id}>{o.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Team select */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Team</label>
+                {loadingOrgTeams ? (
+                  <p className="text-xs text-gray-400">Loading teams…</p>
+                ) : (
+                  <select
+                    value={draftTeamId}
+                    onChange={(e) => setDraftTeamId(e.target.value)}
+                    disabled={!draftOrgId || orgTeams.length === 0}
+                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orbit-forest disabled:opacity-50"
+                  >
+                    <option value="">Select team…</option>
+                    {orgTeams.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" onClick={saveDetails} loading={savingDetails} disabled={!draftOrgId || !draftTeamId}>
+                  Save changes
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditingDetails(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 mt-1">
+              <h1 className="text-2xl font-bold text-orbit-dark">
+                {data.orgName} — {data.teamName}
+              </h1>
+              <button
+                onClick={openEditDetails}
+                title="Edit organisation and team"
+                className="text-gray-400 hover:text-orbit-forest transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-3 mt-2">
             <Badge variant={data.status} />
             <span className="text-sm text-gray-500">
