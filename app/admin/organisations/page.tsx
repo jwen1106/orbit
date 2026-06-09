@@ -75,53 +75,26 @@ export default async function OrganisationsPage() {
               </tr>
             </thead>
             <tbody>
-              {organisations.map((org) => {
+              {organisations.flatMap((org) => {
                 const teams = org.teams.length > 0
                   ? org.teams
-                  : [{ id: '', name: '—' }]; // placeholder row if no teams yet
+                  : [{ id: '', name: '—' }];
 
-                return teams.map((team, ti) => (
+                return teams.map((team) => (
                   <tr
-                    key={`${org.id}-${team.id || ti}`}
+                    key={`${org.id}-${team.id}`}
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
-                    {/* Org-level cells — only on first team row */}
-                    {ti === 0 && (
-                      <>
-                        <td
-                          rowSpan={teams.length}
-                          className="px-4 py-4 font-semibold text-orbit-dark align-top border-r border-gray-100"
-                        >
-                          <Link
-                            href={`/admin/organisations/${org.id}`}
-                            className="hover:text-orbit-forest hover:underline"
-                          >
-                            {org.name}
-                          </Link>
-                        </td>
-                        <td
-                          rowSpan={teams.length}
-                          className="px-4 py-4 text-gray-600 align-top border-r border-gray-100"
-                        >
-                          {org.industry}
-                        </td>
-                      </>
-                    )}
-
-                    {/* Team name */}
+                    <td className="px-4 py-4 font-semibold text-orbit-dark truncate">
+                      <Link href={`/admin/organisations/${org.id}`} className="hover:text-orbit-forest hover:underline">
+                        {org.name}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-4 text-gray-600 truncate">{org.industry}</td>
                     <td className="px-4 py-4 text-gray-700 font-medium">{team.name}</td>
-
-                    {/* Created — only first row */}
-                    {ti === 0 ? (
-                      <td
-                        rowSpan={teams.length}
-                        className="px-4 py-4 text-gray-500 text-xs align-top"
-                      >
-                        {org.createdAt?.toDate?.().toLocaleDateString('en-GB') ?? '—'}
-                      </td>
-                    ) : null}
-
-                    {/* Dashboard button — per team */}
+                    <td className="px-4 py-4 text-gray-500 text-xs">
+                      {org.createdAt?.toDate?.().toLocaleDateString('en-GB') ?? '—'}
+                    </td>
                     <td className="px-4 py-4 text-center">
                       {team.id ? (
                         <Link
@@ -136,8 +109,6 @@ export default async function OrganisationsPage() {
                         </Link>
                       ) : <span className="text-gray-300 text-xs">No teams</span>}
                     </td>
-
-                    {/* Action Plan button — per team */}
                     <td className="px-4 py-4 text-center">
                       {team.id ? (
                         <Link
