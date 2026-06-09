@@ -49,6 +49,7 @@ export default async function OrgDashboardPage({
           data={dashboard}
           showAnalysisBanner
           analysisHref={`/admin/organisations/${org.id}/dashboard/analysis`}
+          deltaHref={`/admin/organisations/${org.id}/dashboard/delta`}
         />
       ) : null}
     </div>

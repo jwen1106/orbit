@@ -63,5 +63,5 @@ export default async function DashboardPage() {
     );
   }
 
-  return <TeamDashboardView data={dashboard} />;
+  return <TeamDashboardView data={dashboard} deltaHref="/dashboard/delta" />;
 }

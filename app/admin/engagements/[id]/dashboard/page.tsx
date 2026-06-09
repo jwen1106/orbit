@@ -27,6 +27,7 @@ export default async function EngagementDashboardPage({
         data={data}
         showAnalysisBanner
         analysisHref={`/admin/engagements/${params.id}/dashboard/analysis`}
+        deltaHref={`/admin/engagements/${params.id}/dashboard/delta`}
       />
     </div>
   );

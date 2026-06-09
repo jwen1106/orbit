@@ -21,6 +21,7 @@ interface TeamDashboardViewProps {
   data: EngagementDashboardData;
   showAnalysisBanner?: boolean;
   analysisHref?: string;
+  deltaHref?: string;
 }
 
 function placeholderClass(text: string) {
@@ -31,6 +32,7 @@ export default function TeamDashboardView({
   data,
   showAnalysisBanner = false,
   analysisHref = '/dashboard/analysis',
+  deltaHref,
 }: TeamDashboardViewProps) {
   const { overallScore, maturityLabel, strengths, opportunities, pillars, teamName } = data;
 
@@ -96,6 +98,14 @@ export default function TeamDashboardView({
           >
             View for detailed analysis
           </Link>
+          {deltaHref && (
+            <Link
+              href={deltaHref}
+              className="mt-2 w-full inline-flex items-center justify-center px-3 py-2 text-sm font-semibold rounded-md border border-orbit-forest text-orbit-forest hover:bg-green-50 transition-colors"
+            >
+              Manager &amp; Member Analysis
+            </Link>
+          )}
         </div>
 
         {/* Top 3 Strengths */}
