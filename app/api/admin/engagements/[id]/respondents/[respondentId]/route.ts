@@ -57,32 +57,26 @@ export async function DELETE(
 ) {
   try {
     await requireAdmin(req);
-    const engDoc = await adminDb.collection('engagements').doc(params.id).get();
-    if (!engDoc.exists || engDoc.data()?.status !== 'active') {
-      return NextResponse.json({ error: 'Engagement is not active' }, { status: 400 });
+
+    const ref = adminDb
+      .collection('engagements').doc(params.id)
+      .collection('respondents').doc(params.respondentId);
+
+    const doc = await ref.get();
+    if (!doc.exists) {
+      return NextResponse.json({ error: 'Respondent not found' }, { status: 404 });
     }
 
-    const respondent = await getInviteRespondent(params.id, params.respondentId);
-    if (!respondent) {
-      return NextResponse.json({ error: 'Invite not found' }, { status: 404 });
-    }
-
-    if (respondent.data.status === 'completed') {
-      return NextResponse.json(
-        { error: 'Cannot remove someone who has already completed the survey' },
-        { status: 400 },
-      );
-    }
-
-    const responsesSnap = await respondent.ref.collection('responses').get();
+    // Delete all individual responses then the respondent document
+    const responsesSnap = await ref.collection('responses').get();
     const batch = adminDb.batch();
     responsesSnap.docs.forEach((d) => batch.delete(d.ref));
-    batch.delete(respondent.ref);
+    batch.delete(ref);
     await batch.commit();
 
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[respondents DELETE]', err);
-    return NextResponse.json({ error: 'Failed to remove invite' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to remove respondent' }, { status: 500 });
   }
 }

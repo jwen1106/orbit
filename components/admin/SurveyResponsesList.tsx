@@ -9,11 +9,22 @@ interface Props {
   onUpdated: () => void;
 }
 
-function formatDate(ts: Respondent['completedAt']): string {
+function formatDateTime(ts: Respondent['completedAt']): string {
   if (!ts) return '—';
-  const d = (ts as { toDate?: () => Date }).toDate?.();
+  // Handle both Firestore Timestamp objects and their JSON-serialised form
+  let d: Date | null = null;
+  if (typeof (ts as { toDate?: unknown }).toDate === 'function') {
+    d = (ts as { toDate: () => Date }).toDate();
+  } else if (typeof (ts as { seconds?: number }).seconds === 'number') {
+    d = new Date((ts as { seconds: number }).seconds * 1000);
+  } else if (typeof (ts as { _seconds?: number })._seconds === 'number') {
+    d = new Date((ts as { _seconds: number })._seconds * 1000);
+  }
   if (!d) return '—';
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 }
 
 export default function SurveyResponsesList({ engagementId, respondents, onUpdated }: Props) {
@@ -75,7 +86,7 @@ export default function SurveyResponsesList({ engagementId, respondents, onUpdat
                 <th className="px-3 py-2 text-left font-semibold text-gray-500">Name</th>
                 <th className="px-3 py-2 text-left font-semibold text-gray-500">Email</th>
                 <th className="px-3 py-2 text-left font-semibold text-gray-500">Role</th>
-                <th className="px-3 py-2 text-left font-semibold text-gray-500">Date completed</th>
+                <th className="px-3 py-2 text-left font-semibold text-gray-500">Date and Time</th>
                 <th className="px-3 py-2 text-right font-semibold text-gray-500"></th>
               </tr>
             </thead>
@@ -97,7 +108,7 @@ export default function SurveyResponsesList({ engagementId, respondents, onUpdat
                   </td>
                   <td className="px-3 py-2.5 text-gray-500">
                     {r.status === 'completed'
-                      ? formatDate(r.completedAt)
+                      ? formatDateTime(r.completedAt)
                       : <span className="italic text-amber-600">In progress</span>}
                   </td>
                   <td className="px-3 py-2.5 text-right">
