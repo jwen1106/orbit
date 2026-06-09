@@ -3,22 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Organisation, Team } from '@/types';
 import ActionPlanView from '@/components/admin/ActionPlanView';
-
-export type SerializedActionItem = {
-  id: string;
-  title: string;
-  description: string;
-  competency: string;
-  timeframe: string;
-  teamId: string;
-  organisationId: string;
-  assignedTo: string;
-  completionPct: number;
-  comments: string;
-  status: string;
-  source: string;
-  priority: number;
-};
+import type { SerializedActionItem } from '@/components/admin/ActionPlanView';
 
 async function getData(orgId: string) {
   const [orgDoc, teamsSnap] = await Promise.all([

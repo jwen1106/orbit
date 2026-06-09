@@ -3,7 +3,21 @@
 import { useState, useRef } from 'react';
 import type { Team, Competency } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
-import type { SerializedActionItem } from '@/app/admin/organisations/[id]/action-plan/page';
+export type SerializedActionItem = {
+  id: string;
+  title: string;
+  description: string;
+  competency: string;
+  timeframe: string;
+  teamId: string;
+  organisationId: string;
+  assignedTo: string;
+  completionPct: number;
+  comments: string;
+  status: string;
+  source: string;
+  priority: number;
+};
 
 const COMPETENCIES: Competency[] = ['people_relationships', 'growth_impact', 'purpose_alignment'];
 
