@@ -162,38 +162,6 @@ export default function EngagementDetailPage() {
           <h1 className="text-2xl font-bold text-orbit-dark mt-1">
             {data.orgName} — {data.teamName}
           </h1>
-          {/* Survey title — editable inline */}
-          <div className="mt-1.5 flex items-center gap-2">
-            {editingTitle ? (
-              <>
-                <input
-                  autoFocus
-                  type="text"
-                  value={titleDraft}
-                  onChange={(e) => setTitleDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }}
-                  placeholder="e.g. Q1 2026 Assessment"
-                  className="text-sm border border-orbit-forest rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest w-64"
-                />
-                <button onClick={saveTitle} disabled={savingTitle} className="text-xs font-semibold text-orbit-forest hover:underline">
-                  {savingTitle ? 'Saving…' : 'Save'}
-                </button>
-                <button onClick={() => setEditingTitle(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
-              </>
-            ) : (
-              <button
-                onClick={() => { setTitleDraft(data.title ?? ''); setEditingTitle(true); }}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-orbit-forest transition-colors group"
-              >
-                {data.title
-                  ? <span className="font-semibold text-orbit-dark">{data.title}</span>
-                  : <span className="italic text-gray-400">Add survey title…</span>}
-                <svg className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-            )}
-          </div>
           <div className="flex items-center gap-3 mt-2">
             <Badge variant={data.status} />
             <span className="text-sm text-gray-500">
@@ -249,6 +217,42 @@ export default function EngagementDetailPage() {
 
         {/* Survey links — 3/4 width */}
         <Card className="lg:col-span-3">
+          {/* Survey title — mandatory, saved on blur/Enter */}
+          <div className="mb-5 pb-5 border-b border-gray-100">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              Survey Title <span className="text-red-400">*</span>
+            </label>
+            {editingTitle ? (
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  type="text"
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onBlur={saveTitle}
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }}
+                  placeholder="e.g. Q1 2026 Operational Assessment"
+                  className="flex-1 text-sm border border-orbit-forest rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orbit-forest text-orbit-dark"
+                />
+                <button onClick={saveTitle} disabled={savingTitle} className="text-xs font-semibold text-orbit-forest hover:underline whitespace-nowrap">
+                  {savingTitle ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setTitleDraft(data.title ?? ''); setEditingTitle(true); }}
+                className="w-full text-left rounded-lg border border-gray-200 hover:border-orbit-forest px-3 py-2 transition-colors group flex items-center justify-between"
+              >
+                {data.title
+                  ? <span className="text-sm font-semibold text-orbit-dark">{data.title}</span>
+                  : <span className="text-sm italic text-red-400">Required — click to add a survey title</span>}
+                <svg className="w-3.5 h-3.5 text-gray-400 group-hover:text-orbit-forest flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
+          </div>
+
           <h2 className="text-base font-bold text-orbit-dark mb-4">Survey links</h2>
           <div className="space-y-4">
             <div>
