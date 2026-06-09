@@ -1,9 +1,9 @@
 import { adminDb } from '@/lib/firebase-admin';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import type { Organisation, Team } from '@/types';
+import type { Organisation } from '@/types';
 import ActionPlanView from '@/components/admin/ActionPlanView';
-import type { SerializedActionItem } from '@/components/admin/ActionPlanView';
+import type { SerializedActionItem, SerializedTeam } from '@/components/admin/ActionPlanView';
 
 async function getData(orgId: string) {
   const [orgDoc, teamsSnap] = await Promise.all([
@@ -14,7 +14,19 @@ async function getData(orgId: string) {
   if (!orgDoc.exists) return null;
 
   const org = { id: orgDoc.id, ...orgDoc.data() } as Organisation;
-  const teams = teamsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Team));
+
+  // Serialize teams — strip Timestamp fields so they can be passed to a Client Component
+  const teams: SerializedTeam[] = teamsSnap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      name: data.name ?? '',
+      organisationId: data.organisationId ?? orgId,
+      function: data.function ?? 'front',
+      size: data.size ?? 0,
+      managerId: data.managerId ?? '',
+    };
+  });
 
   const teamIds = teams.map((t) => t.id);
   let actions: SerializedActionItem[] = [];

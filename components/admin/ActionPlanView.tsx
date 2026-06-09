@@ -1,8 +1,17 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import type { Team, Competency } from '@/types';
+import type { Competency } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
+
+export type SerializedTeam = {
+  id: string;
+  name: string;
+  organisationId: string;
+  function: string;
+  size: number;
+  managerId: string;
+};
 export type SerializedActionItem = {
   id: string;
   title: string;
@@ -287,7 +296,7 @@ export default function ActionPlanView({
 }: {
   orgId: string;
   orgName: string;
-  teams: Team[];
+  teams: SerializedTeam[];
   initialActions: SerializedActionItem[];
 }) {
   const [actions, setActions] = useState<SerializedActionItem[]>(initialActions);
