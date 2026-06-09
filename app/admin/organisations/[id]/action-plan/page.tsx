@@ -6,7 +6,7 @@ import type { Organisation } from '@/types';
 import ActionPlanView from '@/components/admin/ActionPlanView';
 import type { SerializedActionItem, SerializedTeam } from '@/components/admin/ActionPlanView';
 
-async function getData(orgId: string) {
+async function getData(orgId: string, filterTeamId?: string) {
   const [orgDoc, teamsSnap] = await Promise.all([
     adminDb.collection('organisations').doc(orgId).get(),
     adminDb.collection('teams').where('organisationId', '==', orgId).get(),
@@ -17,7 +17,7 @@ async function getData(orgId: string) {
   const org = { id: orgDoc.id, ...orgDoc.data() } as Organisation;
 
   // Serialize teams — strip Timestamp fields so they can be passed to a Client Component
-  const teams: SerializedTeam[] = teamsSnap.docs.map((d) => {
+  let teams: SerializedTeam[] = teamsSnap.docs.map((d) => {
     const data = d.data();
     return {
       id: d.id,
@@ -28,6 +28,9 @@ async function getData(orgId: string) {
       managerId: data.managerId ?? '',
     };
   });
+
+  // Filter to a specific team if requested
+  if (filterTeamId) teams = teams.filter((t) => t.id === filterTeamId);
 
   const teamIds = teams.map((t) => t.id);
   let actions: SerializedActionItem[] = [];
@@ -67,8 +70,10 @@ async function getData(orgId: string) {
 
 export default async function OrgActionPlanPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams: { teamId?: string };
 }) {
   try {
     await requireAdmin();
@@ -76,9 +81,11 @@ export default async function OrgActionPlanPage({
     redirect('/login');
   }
 
-  const data = await getData(params.id);
+  const filterTeamId = searchParams.teamId;
+  const data = await getData(params.id, filterTeamId);
   if (!data) notFound();
   const { org, teams, actions } = data;
+  const teamName = teams[0]?.name;
 
   return (
     <div className="space-y-6">
@@ -86,7 +93,9 @@ export default async function OrgActionPlanPage({
         <Link href="/admin/organisations" className="text-sm text-orbit-green hover:underline">
           ← Organisations
         </Link>
-        <h1 className="text-2xl font-bold text-orbit-dark mt-1">Action Plan</h1>
+        <h1 className="text-2xl font-bold text-orbit-dark mt-1">
+          Action Plan{teamName ? ` — ${teamName}` : ''}
+        </h1>
         <p className="text-sm text-gray-500 mt-0.5">
           {org.name} · Define specific, measurable actions tied to maturity assessment results
         </p>

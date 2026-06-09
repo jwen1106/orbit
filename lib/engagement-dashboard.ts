@@ -420,7 +420,7 @@ export async function getManagerDashboardData(uid: string) {
   return { team, dashboard, latestEngagement: dashboardEng };
 }
 
-export async function getOrgDashboardData(orgId: string) {
+export async function getOrgDashboardData(orgId: string, teamId?: string) {
   const [orgDoc, teamsSnap] = await Promise.all([
     adminDb.collection('organisations').doc(orgId).get(),
     adminDb.collection('teams').where('organisationId', '==', orgId).get(),
@@ -429,7 +429,10 @@ export async function getOrgDashboardData(orgId: string) {
   if (!orgDoc.exists) return null;
 
   const org = { id: orgDoc.id, ...orgDoc.data() } as Organisation;
-  const teams = teamsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Team));
+  let teams = teamsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Team));
+
+  // If a specific teamId was requested, filter to just that team
+  if (teamId) teams = teams.filter((t) => t.id === teamId);
 
   if (teams.length === 0) {
     return { org, teams, dashboard: null as EngagementDashboardData | null };
