@@ -281,6 +281,16 @@ function CompetencyCard({ competency, breakdown, actionCount }: {
 }
 
 // ─── Main view ─────────────────────────────────────────────────────────────────
+function actionPlanHrefFromBack(backHref: string): string {
+  if (backHref.startsWith('/dashboard')) return '/dashboard/action-plan';
+  const engagementMatch = backHref.match(/^\/admin\/engagements\/([^/]+)/);
+  if (engagementMatch) return `/admin/engagements/${engagementMatch[1]}/actions`;
+  if (backHref.includes('/admin/organisations/')) {
+    return backHref.replace(/\/dashboard(\?.*)?$/, '/action-plan$1');
+  }
+  return '/dashboard/action-plan';
+}
+
 interface DetailedAnalysisViewProps {
   data: DetailedAnalysisData;
   backHref: string;
@@ -485,7 +495,7 @@ export default function DetailedAnalysisView({
                       <p className="text-xs text-gray-500 mt-1 leading-snug line-clamp-3">{action.description}</p>
                     )}
                     <Link
-                      href={`${backHref}#actions`}
+                      href={actionPlanHrefFromBack(backHref)}
                       className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-white bg-orbit-forest rounded px-3 py-1 hover:bg-orbit-green transition-colors"
                     >
                       View details
