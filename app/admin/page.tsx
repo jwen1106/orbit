@@ -99,18 +99,60 @@ export default async function AdminDashboard() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {[
-          { label: 'Organisations', value: stats.organisations, color: 'text-orbit-forest' },
-          { label: 'Teams', value: stats.teams, color: 'text-orbit-forest' },
-          { label: 'Draft Surveys', value: stats.draft, color: 'text-gray-400' },
-          { label: 'Active Surveys', value: stats.active, color: 'text-orbit-amber' },
-          { label: 'Closed Surveys', value: stats.closed, color: 'text-orbit-green' },
-        ].map((stat) => (
-          <Card key={stat.label} padding="md">
-            <p className="text-xs text-gray-500">{stat.label}</p>
-            <p className={`text-3xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
-          </Card>
-        ))}
+        {/* Organisations */}
+        <div className="rounded-xl bg-white border border-gray-200 shadow-sm px-6 py-6 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-orbit-forest/10 flex items-center justify-center">
+            <svg className="w-6 h-6 text-orbit-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 21h18M3 7l9-4 9 4M4 7v14M20 7v14M9 21V11h6v10" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold text-orbit-forest">{stats.organisations}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Organisations</p>
+        </div>
+
+        {/* Teams */}
+        <div className="rounded-xl bg-white border border-gray-200 shadow-sm px-6 py-6 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-orbit-forest/10 flex items-center justify-center">
+            <svg className="w-6 h-6 text-orbit-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a4 4 0 00-5.916-3.519M17 20H7m10 0v-2a5.978 5.978 0 00-.94-3.254M7 20H2v-2a4 4 0 015.916-3.519M7 20v-2a5.978 5.978 0 01.94-3.254m5.12 0A5.978 5.978 0 0112 14a5.978 5.978 0 01-1.06.746M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM3 10a2 2 0 114 0 2 2 0 01-4 0z" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold text-orbit-forest">{stats.teams}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Teams</p>
+        </div>
+
+        {/* Draft Surveys */}
+        <div className="rounded-xl bg-white border border-gray-200 shadow-sm px-6 py-6 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-3-3v6M5 8h14a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9a2 2 0 012-2zm3-4h6a1 1 0 011 1v1H7V5a1 1 0 011-1z" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold text-gray-400">{stats.draft}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Draft Surveys</p>
+        </div>
+
+        {/* Active Surveys */}
+        <div className="rounded-xl bg-white border border-gray-200 shadow-sm px-6 py-6 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-orbit-amber/15 flex items-center justify-center">
+            <svg className="w-6 h-6 text-orbit-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold text-orbit-amber">{stats.active}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Surveys</p>
+        </div>
+
+        {/* Closed Surveys */}
+        <div className="rounded-xl bg-white border border-gray-200 shadow-sm px-6 py-6 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-orbit-green/15 flex items-center justify-center">
+            <svg className="w-6 h-6 text-orbit-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-4xl font-bold text-orbit-green">{stats.closed}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Closed Surveys</p>
+        </div>
       </div>
 
       {/* Quick actions */}
