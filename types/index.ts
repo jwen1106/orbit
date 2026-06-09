@@ -40,6 +40,7 @@ export interface Team {
 
 export interface Engagement {
   id: string;
+  title?: string;
   teamId: string;
   organisationId: string;
   status: EngagementStatus;

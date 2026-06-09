@@ -65,6 +65,7 @@ export default async function EngagementsPage() {
                 <th className="px-6 py-3 text-left font-semibold text-gray-600 w-10">#</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Organisation</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Team</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Survey Title</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Status</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Created</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Engagement</th>
@@ -76,6 +77,11 @@ export default async function EngagementsPage() {
                   <td className="px-6 py-4 text-gray-400 text-xs">{i + 1}</td>
                   <td className="px-6 py-4 font-medium text-orbit-dark">{eng.orgName}</td>
                   <td className="px-6 py-4 text-gray-600">{eng.teamName}</td>
+                  <td className="px-6 py-4 text-gray-600">
+                    {eng.title
+                      ? <span className="font-medium text-orbit-dark">{eng.title}</span>
+                      : <span className="text-gray-300 italic text-xs">No title</span>}
+                  </td>
                   <td className="px-6 py-4">
                     <Badge variant={eng.status} />
                   </td>

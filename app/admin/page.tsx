@@ -44,6 +44,7 @@ async function getDashboardData() {
     const scores = insightsMap[eng.id] ?? null;
     return {
       id: eng.id,
+      title: eng.title ?? null,
       teamId: eng.teamId,
       organisationId: eng.organisationId,
       status: eng.status,
@@ -232,8 +233,9 @@ export default async function AdminDashboard() {
                 <th className="px-4 py-3 text-left font-semibold text-gray-600 w-10">#</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Organisation</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Team</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Survey Title</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Industry</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-600">Survey Status</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Status</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Manage</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Export to CSV</th>
               </tr>
@@ -254,6 +256,11 @@ export default async function AdminDashboard() {
                     <td className="px-4 py-3 text-gray-400 text-xs tabular-nums">{i + 1}</td>
                     <td className="px-6 py-3 font-medium text-orbit-dark">{eng.orgName}</td>
                     <td className="px-6 py-3 text-gray-600">{eng.teamName}</td>
+                    <td className="px-6 py-3 text-sm">
+                      {eng.title
+                        ? <span className="font-medium text-orbit-dark">{eng.title}</span>
+                        : <span className="text-gray-300 italic text-xs">—</span>}
+                    </td>
                     <td className="px-6 py-3 text-gray-500 text-xs">{eng.industry}</td>
                     <td className="px-6 py-3">
                       <Badge variant={eng.status} />

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { requireAdmin } from '@/lib/auth';
+import { FieldValue } from 'firebase-admin/firestore';
 import type { Engagement, Team, Organisation, Respondent } from '@/types';
 
 export async function GET(
@@ -43,6 +44,23 @@ export async function GET(
     });
   } catch (err) {
     console.error('[engagements/[id] GET]', err);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  try {
+    await requireAdmin(req);
+    const { title } = await req.json();
+    const updates: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
+    if (title !== undefined) updates.title = title?.trim() || null;
+    await adminDb.collection('engagements').doc(params.id).update(updates);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[engagements/[id] PATCH]', err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

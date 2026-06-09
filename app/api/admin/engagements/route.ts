@@ -8,12 +8,13 @@ import { QUESTION_SET_VERSION } from '@/types';
 export async function POST(req: NextRequest) {
   try {
     const session = await requireAdmin();
-    const { teamId, organisationId } = await req.json();
+    const { teamId, organisationId, title } = await req.json();
     if (!teamId || !organisationId) {
       return NextResponse.json({ error: 'teamId and organisationId are required' }, { status: 400 });
     }
     const { memberShareToken, managerSurveyToken } = generateEngagementTokens();
     const ref = await adminDb.collection('engagements').add({
+      title: title?.trim() || null,
       teamId,
       organisationId,
       status: 'draft',

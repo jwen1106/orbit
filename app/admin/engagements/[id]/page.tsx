@@ -36,6 +36,9 @@ export default function EngagementDetailPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState<'member' | 'manager' | null>(null);
   const [error, setError] = useState('');
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [savingTitle, setSavingTitle] = useState(false);
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -103,6 +106,21 @@ export default function EngagementDetailPage() {
     }
   }
 
+  async function saveTitle() {
+    setSavingTitle(true);
+    try {
+      await fetch(`/api/admin/engagements/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: titleDraft.trim() || null }),
+      });
+      setData((prev) => prev ? { ...prev, title: titleDraft.trim() || undefined } : prev);
+    } finally {
+      setSavingTitle(false);
+      setEditingTitle(false);
+    }
+  }
+
   function copyLink(type: 'member' | 'manager') {
     if (!data) return;
     const url = type === 'member'
@@ -144,6 +162,38 @@ export default function EngagementDetailPage() {
           <h1 className="text-2xl font-bold text-orbit-dark mt-1">
             {data.orgName} — {data.teamName}
           </h1>
+          {/* Survey title — editable inline */}
+          <div className="mt-1.5 flex items-center gap-2">
+            {editingTitle ? (
+              <>
+                <input
+                  autoFocus
+                  type="text"
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }}
+                  placeholder="e.g. Q1 2026 Assessment"
+                  className="text-sm border border-orbit-forest rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest w-64"
+                />
+                <button onClick={saveTitle} disabled={savingTitle} className="text-xs font-semibold text-orbit-forest hover:underline">
+                  {savingTitle ? 'Saving…' : 'Save'}
+                </button>
+                <button onClick={() => setEditingTitle(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+              </>
+            ) : (
+              <button
+                onClick={() => { setTitleDraft(data.title ?? ''); setEditingTitle(true); }}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-orbit-forest transition-colors group"
+              >
+                {data.title
+                  ? <span className="font-semibold text-orbit-dark">{data.title}</span>
+                  : <span className="italic text-gray-400">Add survey title…</span>}
+                <svg className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
+          </div>
           <div className="flex items-center gap-3 mt-2">
             <Badge variant={data.status} />
             <span className="text-sm text-gray-500">

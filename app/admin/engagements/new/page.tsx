@@ -37,6 +37,7 @@ export default function NewEngagementPage() {
   const [teams, setTeams] = useState<TeamOption[]>([]);
   const [selectedOrg, setSelectedOrg] = useState<OrgOption | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<TeamOption | null>(null);
+  const [title, setTitle] = useState('');
   const [orgsLoading, setOrgsLoading] = useState(true);
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -89,6 +90,7 @@ export default function NewEngagementPage() {
         body: JSON.stringify({
           teamId: selectedTeam.id,
           organisationId: selectedOrg.id,
+          title: title.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -274,6 +276,23 @@ export default function NewEngagementPage() {
             >
               ← Change team
             </button>
+          </div>
+
+          {/* Survey title */}
+          <div className="rounded-xl border border-gray-200 bg-white px-6 py-5">
+            <label className="block text-sm font-semibold text-orbit-dark mb-1">
+              Survey Title <span className="text-gray-400 font-normal text-xs">(optional)</span>
+            </label>
+            <p className="text-xs text-gray-500 mb-3">
+              Give this survey a name to distinguish it from other engagements for the same team — e.g. &ldquo;Q1 2026 Assessment&rdquo; or &ldquo;Post-restructure Review&rdquo;.
+            </p>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Q1 2026 Operational Assessment"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-orbit-dark placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+            />
           </div>
 
           {/* Summary card */}
