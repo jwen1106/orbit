@@ -83,10 +83,42 @@ export default async function AdminDashboard() {
   const { engagements, stats } = await getDashboardData();
 
   const quickLinks = [
-    { href: '/admin/organisations/new', label: 'New Organisation', icon: '🏢' },
-    { href: '/admin/engagements/new', label: 'New Engagement', icon: '📋' },
-    { href: '/admin/questions', label: 'Question Bank', icon: '❓' },
-    { href: '/admin/benchmarks', label: 'Benchmarks', icon: '📈' },
+    {
+      href: '/admin/organisations/new',
+      label: 'New Organisation',
+      svg: (
+        <svg className="w-6 h-6 text-orbit-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 21h18M3 7l9-4 9 4M4 7v14M20 7v14M9 21V11h6v10" />
+        </svg>
+      ),
+    },
+    {
+      href: '/admin/engagements/new',
+      label: 'New Engagement',
+      svg: (
+        <svg className="w-6 h-6 text-orbit-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+    },
+    {
+      href: '/admin/questions',
+      label: 'Question Bank',
+      svg: (
+        <svg className="w-6 h-6 text-orbit-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      href: '/admin/benchmarks',
+      label: 'Benchmarks',
+      svg: (
+        <svg className="w-6 h-6 text-orbit-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -163,9 +195,11 @@ export default async function AdminDashboard() {
             <Link
               key={link.href}
               href={link.href}
-              className="orbit-card p-4 flex flex-col items-center gap-2 hover:border-orbit-green hover:shadow transition-all text-center group"
+              className="orbit-card p-5 flex flex-col items-center gap-3 hover:border-orbit-green hover:shadow transition-all text-center group"
             >
-              <span className="text-2xl">{link.icon}</span>
+              <div className="w-11 h-11 rounded-full bg-orbit-forest/10 flex items-center justify-center group-hover:bg-orbit-forest/20 transition-colors">
+                {link.svg}
+              </div>
               <span className="text-sm font-semibold text-orbit-dark group-hover:text-orbit-forest">
                 {link.label}
               </span>
