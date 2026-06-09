@@ -60,7 +60,25 @@ async function getQuestions(version: string, role: 'member' | 'manager', organis
     .where('isActive', '==', true)
     .get();
   return snap.docs
-    .map((d) => ({ id: d.id, ...d.data() } as Question))
+    .map((d) => {
+      const r = d.data();
+      // Explicitly pick only plain-serialisable fields — Firestore docs may
+      // contain Timestamp fields (createdAt etc.) that cannot cross the
+      // server→client boundary.
+      const q: Question = {
+        id: d.id,
+        version: r.version ?? '',
+        competency: r.competency,
+        role: r.role,
+        order: r.order ?? 0,
+        text: r.text ?? '',
+        subtext: r.subtext ?? undefined,
+        criteria: r.criteria ?? {},
+        isActive: r.isActive ?? true,
+        assignedOrganisationIds: r.assignedOrganisationIds ?? [],
+      };
+      return q;
+    })
     .filter((q) => {
       if (q.role !== role && q.role !== 'both') return false;
       // Global questions (empty array) show to everyone; otherwise check if org is assigned

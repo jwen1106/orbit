@@ -40,10 +40,24 @@ async function getManagerSurveyData(token: string) {
     .get();
 
   const questions = questionsSnap.docs
-    .map((d) => ({ id: d.id, ...d.data() } as Question))
+    .map((d): Question => {
+      const r = d.data();
+      return {
+        id: d.id,
+        version: r.version ?? '',
+        competency: r.competency,
+        role: r.role,
+        order: r.order ?? 0,
+        text: r.text ?? '',
+        subtext: r.subtext ?? undefined,
+        criteria: r.criteria ?? {},
+        isActive: r.isActive ?? true,
+        assignedOrganisationIds: r.assignedOrganisationIds ?? [],
+      };
+    })
     .filter((q) => {
       if (q.role !== 'manager' && q.role !== 'both') return false;
-      const assigned: string[] = (q as Question & { assignedOrganisationIds?: string[] }).assignedOrganisationIds ?? [];
+      const assigned = q.assignedOrganisationIds ?? [];
       return assigned.length === 0 || assigned.includes(engagement.organisationId);
     })
     .sort((a, b) => {
