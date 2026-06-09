@@ -53,16 +53,16 @@ const COMPETENCY_COLORS: Record<Competency, { border: string; bg: string; text: 
     pill: 'bg-orbit-forest/10 text-orbit-forest',
   },
   growth_impact: {
-    border: 'border-orbit-green',
-    bg: 'bg-orbit-green/5',
-    text: 'text-orbit-green',
-    pill: 'bg-orbit-green/10 text-orbit-forest',
+    border: 'border-orbit-forest',
+    bg: 'bg-orbit-forest/5',
+    text: 'text-orbit-forest',
+    pill: 'bg-orbit-forest/10 text-orbit-forest',
   },
   purpose_alignment: {
-    border: 'border-orbit-amber',
-    bg: 'bg-orbit-amber/5',
-    text: 'text-orbit-amber',
-    pill: 'bg-orbit-amber/10 text-orbit-amber',
+    border: 'border-orbit-forest',
+    bg: 'bg-orbit-forest/5',
+    text: 'text-orbit-forest',
+    pill: 'bg-orbit-forest/10 text-orbit-forest',
   },
 };
 
