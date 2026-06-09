@@ -6,6 +6,11 @@ import OrbitLogo from '@/components/layout/OrbitLogo';
 import Button from '@/components/ui/Button';
 import type { Question } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
+import {
+  fieldInputClass,
+  fieldLabelCompactClass,
+  fieldReadOnlyClass,
+} from '@/lib/field-styles';
 
 interface SurveyFlowProps {
   engagementId: string;
@@ -168,37 +173,37 @@ export default function SurveyFlow({
                   <p className="text-sm font-semibold text-orbit-dark -mb-1">Your Details</p>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Full Name <span className="text-red-400">*</span></label>
+                    <label className={fieldLabelCompactClass}>Full Name <span className="text-red-400">*</span></label>
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Alex Johnson"
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-orbit-dark placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orbit-green"
+                      className={fieldInputClass}
                       required
                       autoFocus
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Email Address</label>
+                    <label className={fieldLabelCompactClass}>Email Address</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="e.g. alex.johnson@example.com"
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-orbit-dark placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orbit-green"
+                      className={fieldInputClass}
                     />
                   </div>
 
                   {/* Pre-populated survey link (read-only) */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1">Survey Link</label>
+                    <label className={fieldLabelCompactClass}>Survey Link</label>
                     <input
                       type="text"
                       readOnly
                       value={surveyUrl}
-                      className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500 font-mono cursor-default select-all"
+                      className={fieldReadOnlyClass}
                     />
                   </div>
 

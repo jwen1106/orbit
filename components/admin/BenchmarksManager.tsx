@@ -3,6 +3,10 @@
 import { useState, useTransition } from 'react';
 import type { Benchmark, BenchmarkEntry, Competency, OfficeFunction } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
+import {
+  fieldInputCompactClass,
+  fieldSelectCompactClass,
+} from '@/lib/field-styles';
 
 const COMPETENCIES: Competency[] = ['people_relationships', 'growth_impact', 'purpose_alignment'];
 const FUNCTIONS: OfficeFunction[] = ['front', 'middle', 'back'];
@@ -74,7 +78,7 @@ function ScoreInputPair({
         placeholder="Avg"
         value={value.industryAverage}
         onChange={(e) => onChange({ ...value, industryAverage: e.target.value })}
-        className="w-14 text-center text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+        className={`${fieldInputCompactClass} w-14 px-1 py-0.5`}
       />
       <span className="text-gray-300">/</span>
       <input
@@ -85,7 +89,7 @@ function ScoreInputPair({
         placeholder="Best"
         value={value.bestInClass}
         onChange={(e) => onChange({ ...value, bestInClass: e.target.value })}
-        className="w-14 text-center text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+        className={`${fieldInputCompactClass} w-14 px-1 py-0.5`}
       />
     </div>
   );
@@ -337,14 +341,14 @@ export default function BenchmarksManager({ initialBenchmarks }: { initialBenchm
                     placeholder="e.g. Financial Services"
                     value={newData.industry}
                     onChange={(e) => setNewData((d) => ({ ...d, industry: e.target.value }))}
-                    className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+                    className={fieldInputCompactClass}
                   />
                 </td>
                 <td className="px-3 py-2">
                   <select
                     value={newData.function}
                     onChange={(e) => setNewData((d) => ({ ...d, function: e.target.value as OfficeFunction }))}
-                    className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest capitalize"
+                    className={`${fieldSelectCompactClass} w-full capitalize`}
                   >
                     {FUNCTIONS.map((f) => (
                       <option key={f} value={f} className="capitalize">{f} office</option>
@@ -357,7 +361,7 @@ export default function BenchmarksManager({ initialBenchmarks }: { initialBenchm
                     placeholder="e.g. 11-25"
                     value={newData.sizeRange}
                     onChange={(e) => setNewData((d) => ({ ...d, sizeRange: e.target.value }))}
-                    className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+                    className={fieldInputCompactClass}
                   />
                 </td>
                 {COMPETENCIES.map((c) => (
@@ -429,14 +433,14 @@ export default function BenchmarksManager({ initialBenchmarks }: { initialBenchm
                           type="text"
                           value={editData.industry}
                           onChange={(e) => setEditData((d) => ({ ...d, industry: e.target.value }))}
-                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+                          className={fieldInputCompactClass}
                         />
                       </td>
                       <td className="px-3 py-2">
                         <select
                           value={editData.function}
                           onChange={(e) => setEditData((d) => ({ ...d, function: e.target.value as OfficeFunction }))}
-                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest capitalize"
+                          className={`${fieldSelectCompactClass} w-full capitalize`}
                         >
                           {FUNCTIONS.map((f) => (
                             <option key={f} value={f} className="capitalize">{f} office</option>
@@ -448,7 +452,7 @@ export default function BenchmarksManager({ initialBenchmarks }: { initialBenchm
                           type="text"
                           value={editData.sizeRange}
                           onChange={(e) => setEditData((d) => ({ ...d, sizeRange: e.target.value }))}
-                          className="w-full text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+                          className={fieldInputCompactClass}
                         />
                       </td>
                       {COMPETENCIES.map((c) => (

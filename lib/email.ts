@@ -30,7 +30,7 @@ export async function sendManagerDashboardInvite(
           <p>Use the credentials emailed separately to log in and complete your manager survey.</p>
           <a href="${dashboardUrl}"
              style="display: inline-block; background: #1A4D23; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; margin: 16px 0;">
-            Access Orbit ?
+            Access Orbit &rarr;
           </a>
           <p style="color: #666; font-size: 13px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">
             This invitation was sent by Oaklin. If you weren't expecting this email, please contact your Oaklin team.
@@ -60,10 +60,10 @@ export async function sendMemberInvite(
         <div style="padding: 32px;">
           <h2 style="color: #1A4D23; margin-top: 0;">Hi ${name},</h2>
           <p>Your organisation is using Orbit to assess team performance. We'd like to hear your perspective.</p>
-          <p>The survey takes approximately 10?15 minutes. Your responses are anonymous and will only be shown as aggregated data.</p>
+          <p>The survey takes approximately 10&ndash;15 minutes. Your responses are anonymised and will only be shown as aggregated data.</p>
           <a href="${surveyUrl}"
              style="display: inline-block; background: #1A4D23; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; margin: 16px 0;">
-            Begin survey ?
+            Begin survey &rarr;
           </a>
           <p style="color: #666; font-size: 13px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">
             Your personal details are stored separately from your responses. Only aggregate data is shared with your team's leadership.
@@ -101,7 +101,7 @@ export async function sendPasswordEmail(
           <p>Please log in and change your password when prompted.</p>
           <a href="${loginUrl}"
              style="display: inline-block; background: #1A4D23; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; margin: 16px 0;">
-            Log in to Orbit ?
+            Log in to Orbit &rarr;
           </a>
           <p style="color: #666; font-size: 13px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">
             Keep these credentials secure. If you didn't request this, contact your Oaklin team immediately.

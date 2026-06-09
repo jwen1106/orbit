@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: '%s | Orbit',
   },
   description:
-    'Operational maturity diagnostic platform — understand your team, prioritise action, and build consistently high performance.',
+    'HPT Diagnostic Tool by Oaklin — assess team operational maturity, benchmark against peers, and prioritise action.',
 };
 
 export default function RootLayout({

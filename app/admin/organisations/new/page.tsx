@@ -96,7 +96,7 @@ export default function NewOrganisationPage() {
         <Link href="/admin/organisations" className="text-sm text-orbit-green hover:underline">
           ← Organisations
         </Link>
-        <h1 className="text-2xl font-bold text-orbit-dark mt-2">New Organisation</h1>
+        <h1 className="text-2xl font-bold text-orbit-dark mt-2">New Team</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

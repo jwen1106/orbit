@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { fieldLabelCompactClass, fieldSelectClass } from '@/lib/field-styles';
 
 interface OrgOption { id: string; name: string }
 interface TeamOption { id: string; name: string; orgId: string }
@@ -43,14 +44,14 @@ export default function AdminCsvExport({ orgs, teams }: AdminCsvExportProps) {
       <div className="flex flex-wrap items-end gap-3">
         {/* Organisation filter */}
         <div>
-          <label htmlFor="export-org" className="block text-xs text-gray-400 mb-1">
+          <label htmlFor="export-org" className={fieldLabelCompactClass}>
             Filter by organisation
           </label>
           <select
             id="export-org"
             value={selectedOrg}
             onChange={(e) => handleOrgChange(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-orbit-dark min-w-[200px] focus:outline-none focus:ring-2 focus:ring-orbit-green/40"
+            className={`${fieldSelectClass} min-w-[200px]`}
           >
             <option value="">All organisations</option>
             {orgs.map((o) => (
@@ -61,7 +62,7 @@ export default function AdminCsvExport({ orgs, teams }: AdminCsvExportProps) {
 
         {/* Team filter */}
         <div>
-          <label htmlFor="export-team" className="block text-xs text-gray-400 mb-1">
+          <label htmlFor="export-team" className={fieldLabelCompactClass}>
             Filter by team
           </label>
           <select
@@ -69,7 +70,7 @@ export default function AdminCsvExport({ orgs, teams }: AdminCsvExportProps) {
             value={selectedTeam}
             onChange={(e) => setSelectedTeam(e.target.value)}
             disabled={filteredTeams.length === 0}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-orbit-dark min-w-[180px] focus:outline-none focus:ring-2 focus:ring-orbit-green/40 disabled:opacity-50"
+            className={`${fieldSelectClass} min-w-[180px]`}
           >
             <option value="">All teams</option>
             {filteredTeams.map((t) => (

@@ -91,7 +91,7 @@ export default async function AdminDashboard() {
   const quickLinks = [
     {
       href: '/admin/organisations/new',
-      label: 'New Organisation',
+      label: 'New Team',
       svg: (
         <svg className="w-6 h-6 text-orbit-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 21h18M3 7l9-4 9 4M4 7v14M20 7v14M9 21V11h6v10" />

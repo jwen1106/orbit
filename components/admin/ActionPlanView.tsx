@@ -3,6 +3,15 @@
 import { useState, useRef } from 'react';
 import type { Competency } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
+import {
+  fieldInputClass,
+  fieldInputCompactClass,
+  fieldLabelCompactClass,
+  fieldReadOnlyClass,
+  fieldSelectClass,
+  fieldSelectCompactClass,
+  fieldTextareaClass,
+} from '@/lib/field-styles';
 
 export type SerializedTeam = {
   id: string;
@@ -241,7 +250,7 @@ function ActionRow({
             onChange={(e) => setAssignedTo(e.target.value)}
             onBlur={() => save('assignedTo', assignedTo)}
             onKeyDown={(e) => e.key === 'Enter' && save('assignedTo', assignedTo)}
-            className="w-full text-xs border border-orbit-forest rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+            className={fieldInputCompactClass}
           />
         ) : (
           <button
@@ -275,7 +284,7 @@ function ActionRow({
               onChange={(e) => setCompletionPct(Number(e.target.value))}
               onBlur={() => save('completionPct', completionPct)}
               onKeyDown={(e) => e.key === 'Enter' && save('completionPct', completionPct)}
-              className="w-16 text-xs border border-orbit-forest rounded px-2 py-1 focus:outline-none"
+              className={`${fieldInputCompactClass} w-16`}
             />
             <span className="text-xs text-gray-400">%</span>
           </div>
@@ -304,7 +313,7 @@ function ActionRow({
             value={comments}
             onChange={(e) => setComments(e.target.value)}
             onBlur={() => save('comments', comments)}
-            className="w-full text-xs border border-orbit-forest rounded px-2 py-1 focus:outline-none resize-none"
+            className={`${fieldInputCompactClass} resize-none`}
           />
         ) : (
           <button
@@ -542,7 +551,7 @@ export default function ActionPlanView({
 
           {/* Row 1: Title */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">
+            <label className={fieldLabelCompactClass}>
               Action Title <span className="text-red-400">*</span>
             </label>
             <input
@@ -550,33 +559,33 @@ export default function ActionPlanView({
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               placeholder="E.g. 'Establish cross-functional communication forum'"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-forest placeholder-gray-300"
+              className={fieldInputClass}
             />
           </div>
 
           {/* Row 2: Timeline + Competency */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <label className={fieldLabelCompactClass}>
                 Timeline <span className="text-red-400">*</span>
               </label>
               <select
                 value={form.timeline}
                 onChange={(e) => setForm((f) => ({ ...f, timeline: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+                className={fieldSelectClass}
               >
                 <option value="short_term">Short-Term</option>
                 <option value="long_term">Long-Term</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <label className={fieldLabelCompactClass}>
                 Linked Competency <span className="text-red-400">*</span>
               </label>
               <select
                 value={form.competency}
                 onChange={(e) => setForm((f) => ({ ...f, competency: e.target.value as Competency }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+                className={fieldSelectClass}
               >
                 {COMPETENCIES.map((c) => (
                   <option key={c} value={c}>{COMPETENCY_LABELS[c]}</option>
@@ -587,31 +596,31 @@ export default function ActionPlanView({
 
           {/* Row 3: Description */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Description <span className="text-red-400">*</span></label>
+            <label className={fieldLabelCompactClass}>Description <span className="text-red-400">*</span></label>
             <textarea
               rows={3}
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="What will you do? Who is responsible? What is the success measure?"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-forest placeholder-gray-300 resize-none"
+              className={`${fieldTextareaClass} placeholder:text-gray-300`}
             />
           </div>
 
           {/* Row 4: Team + Owner */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">
+              <label className={fieldLabelCompactClass}>
                 Team <span className="text-red-400">*</span>
               </label>
               {teams.length === 1 ? (
-                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-orbit-dark bg-gray-50">
+                <div className={`${fieldReadOnlyClass} text-sm`}>
                   {teams[0].name}
                 </div>
               ) : (
                 <select
                   value={form.teamId}
                   onChange={(e) => setForm((f) => ({ ...f, teamId: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+                  className={fieldSelectClass}
                 >
                   <option value="">Select team</option>
                   {teams.map((t) => (
@@ -621,13 +630,13 @@ export default function ActionPlanView({
               )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Owner</label>
+              <label className={fieldLabelCompactClass}>Owner</label>
               <input
                 type="text"
                 value={form.assignedTo}
                 onChange={(e) => setForm((f) => ({ ...f, assignedTo: e.target.value }))}
                 placeholder="E.g. Operations Manager"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-forest placeholder-gray-300"
+                className={fieldInputClass}
               />
             </div>
           </div>
@@ -664,7 +673,7 @@ export default function ActionPlanView({
               <select
                 value={filterTeam}
                 onChange={(e) => setFilterTeam(e.target.value)}
-                className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+                className={fieldSelectCompactClass}
               >
                 <option value="all">All Teams</option>
                 {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -673,7 +682,7 @@ export default function ActionPlanView({
             <select
               value={filterTimeline}
               onChange={(e) => setFilterTimeline(e.target.value)}
-              className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-orbit-forest"
+              className={fieldSelectCompactClass}
             >
               <option value="all">All Timelines</option>
               <option value="short_term">Short-Term</option>

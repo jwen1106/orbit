@@ -1,31 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, adminAuth } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
 import { requireAdmin } from '@/lib/auth';
 import { FieldValue } from 'firebase-admin/firestore';
-import { SESSION_COOKIE_NAME } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest) {
-  // Auth check — identical pattern to /api/auth/verify which is known to work
-  const cookieValue = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-  console.log('[questions GET] cookie present:', !!cookieValue);
-  if (!cookieValue) {
-    return NextResponse.json({ error: 'Unauthorised – no cookie' }, { status: 401 });
-  }
+export async function GET() {
   try {
-    const decoded = await adminAuth.verifySessionCookie(cookieValue, true);
-    console.log('[questions GET] role:', decoded.role);
-    if (decoded.role !== 'oaklin_admin') {
-      return NextResponse.json({ error: 'Unauthorised – wrong role' }, { status: 401 });
-    }
-  } catch (err) {
-    console.error('[questions GET] session verify failed:', err);
-    return NextResponse.json({ error: 'Unauthorised – invalid session' }, { status: 401 });
-  }
-
-  // Fetch questions
-  try {
+    await requireAdmin();
     const snap = await adminDb.collection('questions').get();
     const questions = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
@@ -37,7 +19,7 @@ export async function GET(req: NextRequest) {
       });
     return NextResponse.json(questions);
   } catch (err) {
-    console.error('[questions GET] Firestore error:', err);
+    console.error('[questions GET]', err);
     return NextResponse.json({ error: 'Failed to fetch questions' }, { status: 500 });
   }
 }

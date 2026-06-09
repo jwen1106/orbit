@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { fieldSelectClass } from '@/lib/field-styles';
 
 export interface SurveyOption {
   id: string;
@@ -32,7 +33,7 @@ export default function SurveySelector({ surveys, selectedId, baseUrl }: Props) 
         id="survey-select"
         value={selectedId}
         onChange={(e) => handleChange(e.target.value)}
-        className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-orbit-dark font-semibold min-w-[180px] max-w-[280px] focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+        className={`${fieldSelectClass} font-semibold min-w-[180px] max-w-[280px]`}
       >
         {surveys.map((survey) => (
           <option key={survey.id} value={survey.id}>

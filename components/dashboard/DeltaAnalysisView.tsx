@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import type { QuestionBreakdown, DetailedAnalysisData } from '@/lib/dashboard-types';
 import type { Competency } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
+import { fieldLabelCompactClass, fieldSelectClass } from '@/lib/field-styles';
 
 const COMPETENCIES: Competency[] = [
   'people_relationships',
@@ -62,13 +63,10 @@ function QuestionCard({ question }: { question: QuestionBreakdown }) {
           <p className={`text-5xl font-bold leading-none ${noMem ? 'text-gray-200' : 'text-gray-600'}`}>
             {noMem ? '—' : (question.memberScore?.toFixed(1) ?? '—')}
           </p>
-          {question.memberCriteriaLabel && (
-            <p className="text-xs text-gray-500 mt-3 leading-snug">{question.memberCriteriaLabel}</p>
-          )}
         </div>
         <div className="text-center px-4">
           <span className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-semibold border ${gColour}`}>
-            {delta !== null && <>Δ Delta: {Math.abs(delta).toFixed(1)} &mdash; </>}{gLabel}
+            {delta !== null && <>Δ {Math.abs(delta).toFixed(1)} · </>}{gLabel}
           </span>
         </div>
         <div className="text-center px-4">
@@ -76,9 +74,6 @@ function QuestionCard({ question }: { question: QuestionBreakdown }) {
           <p className={`text-5xl font-bold leading-none ${noMgr ? 'text-gray-200' : 'text-orbit-forest'}`}>
             {noMgr ? '—' : (question.managerScore?.toFixed(1) ?? '—')}
           </p>
-          {question.managerCriteriaLabel && (
-            <p className="text-xs text-gray-500 mt-3 leading-snug">{question.managerCriteriaLabel}</p>
-          )}
         </div>
       </div>
 
@@ -186,11 +181,10 @@ function AggregatedCard({ questions, competencyLabel }: { questions: QuestionBre
           <p className={`text-5xl font-bold leading-none ${memScore === null ? 'text-gray-200' : 'text-gray-600'}`}>
             {memScore !== null ? memScore.toFixed(1) : '—'}
           </p>
-          <p className="text-xs text-gray-400 mt-3">avg score</p>
         </div>
         <div className="text-center px-4">
           <span className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-semibold border ${gColour}`}>
-            {delta !== null && <>Δ Delta: {Math.abs(delta).toFixed(1)} &mdash; </>}{gLabel}
+            {delta !== null && <>Δ {Math.abs(delta).toFixed(1)} · </>}{gLabel}
           </span>
         </div>
         <div className="text-center px-4">
@@ -198,7 +192,6 @@ function AggregatedCard({ questions, competencyLabel }: { questions: QuestionBre
           <p className={`text-5xl font-bold leading-none ${mgrScore === null ? 'text-gray-200' : 'text-orbit-forest'}`}>
             {mgrScore !== null ? mgrScore.toFixed(1) : '—'}
           </p>
-          <p className="text-xs text-gray-400 mt-3">avg score</p>
         </div>
       </div>
 
@@ -242,65 +235,46 @@ function AggregatedCard({ questions, competencyLabel }: { questions: QuestionBre
         </div>
       </div>
 
-      {/* Per-question score summary table */}
+      {/* Per-question score summary */}
       {withData.length > 1 && (
-        <div className="px-6 py-5 border-t border-gray-100 bg-gray-50/40">
-          <p className="text-sm font-bold text-orbit-dark mb-4">Question breakdown</p>
-          <div className="rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm">
-            {/* Column headers */}
-            <div className="grid grid-cols-[minmax(0,1fr)_160px_160px] gap-x-8 px-6 py-3.5 bg-gray-50 border-b border-gray-200">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Question</p>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide text-center">
-                Team Member Average
-              </p>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide text-center">
-                Team Manager Average
-              </p>
-            </div>
+        <div className="border-t border-gray-100">
+          <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Question breakdown</p>
+          </div>
 
-            {/* Rows */}
-            <div className="divide-y divide-gray-100">
-              {questions.map((q) => {
-                const qDelta = q.delta;
-                const { label: ql, colour: qc } =
-                  qDelta !== null ? gapLabel(qDelta) : { label: '—', colour: 'bg-gray-100 text-gray-400 border-gray-200' };
-                const questionLabel = q.questionSubtext ?? q.questionText;
+          <div className="grid grid-cols-12 gap-x-3 px-5 py-2.5 bg-gray-50/60 border-b border-gray-100 text-2xs font-bold text-gray-500 uppercase tracking-wide">
+            <p className="col-span-3">Question</p>
+            <p className="col-span-4 text-center">Team Member</p>
+            <p className="col-span-5 text-center">Team Manager</p>
+          </div>
 
-                return (
-                  <div
-                    key={q.questionId}
-                    className="grid grid-cols-[minmax(0,1fr)_160px_160px] gap-x-8 px-6 py-5 items-center hover:bg-gray-50/60 transition-colors"
-                  >
-                    <div className="min-w-0 pr-4">
-                      <p className="text-sm font-medium text-orbit-dark leading-snug">{questionLabel}</p>
-                      {qDelta !== null && (
-                        <span className={`inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full border text-2xs font-semibold ${qc}`}>
-                          Δ {Math.abs(qDelta).toFixed(1)} · {ql}
-                        </span>
-                      )}
-                    </div>
+          <div className="divide-y divide-gray-100">
+            {questions.map((q) => {
+              const questionLabel = q.questionSubtext ?? q.questionText;
 
-                    <div className="text-center px-2">
-                      <p className={`text-2xl font-bold tabular-nums leading-none ${q.memberScore === null ? 'text-gray-200' : 'text-gray-600'}`}>
-                        {q.memberScore?.toFixed(1) ?? '—'}
-                      </p>
-                      {q.memberCriteriaLabel && (
-                        <p className="text-2xs text-gray-400 mt-2 leading-snug line-clamp-2">{q.memberCriteriaLabel}</p>
-                      )}
-                    </div>
+              return (
+                <div
+                  key={q.questionId}
+                  className="grid grid-cols-12 gap-x-3 px-5 py-3 items-center"
+                >
+                  <p className="col-span-3 text-sm text-orbit-dark leading-snug min-w-0 pr-2">
+                    {questionLabel}
+                  </p>
 
-                    <div className="text-center px-2">
-                      <p className={`text-2xl font-bold tabular-nums leading-none ${q.managerScore === null ? 'text-gray-200' : 'text-orbit-forest'}`}>
-                        {q.managerScore?.toFixed(1) ?? '—'}
-                      </p>
-                      {q.managerCriteriaLabel && (
-                        <p className="text-2xs text-gray-400 mt-2 leading-snug line-clamp-2">{q.managerCriteriaLabel}</p>
-                      )}
-                    </div>
+                  <div className="col-span-4 text-center px-2">
+                    <p className={`text-3xl font-bold tabular-nums leading-none ${q.memberScore === null ? 'text-gray-200' : 'text-gray-600'}`}>
+                      {q.memberScore?.toFixed(1) ?? '—'}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div className="col-span-5 text-center px-2">
+                    <p className={`text-3xl font-bold tabular-nums leading-none ${q.managerScore === null ? 'text-gray-200' : 'text-orbit-forest'}`}>
+                      {q.managerScore?.toFixed(1) ?? '—'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -371,12 +345,12 @@ export default function DeltaAnalysisView({ data }: DeltaAnalysisViewProps) {
       {/* Filter bar — both dropdowns on the left */}
       <div className="flex items-center gap-3 flex-wrap">
         <div>
-          <label htmlFor="competency-select" className="block text-xs text-gray-400 mb-1">Pillar</label>
+          <label htmlFor="competency-select" className={fieldLabelCompactClass}>Pillar</label>
           <select
             id="competency-select"
             value={selectedCompetency}
             onChange={(e) => handleCompetencyChange(e.target.value as Competency)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-orbit-dark font-medium min-w-[200px] focus:outline-none focus:ring-2 focus:ring-orbit-green/40"
+            className={`${fieldSelectClass} min-w-[200px] font-medium`}
           >
             {COMPETENCIES.map((c) => (
               <option key={c} value={c}>{COMPETENCY_LABELS[c]}</option>
@@ -385,12 +359,12 @@ export default function DeltaAnalysisView({ data }: DeltaAnalysisViewProps) {
         </div>
 
         <div>
-          <label htmlFor="question-select" className="block text-xs text-gray-400 mb-1">Question</label>
+          <label htmlFor="question-select" className={fieldLabelCompactClass}>Question</label>
           <select
             id="question-select"
             value={selectedQuestion}
             onChange={(e) => setSelectedQuestion(e.target.value)}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-orbit-dark font-medium min-w-[240px] max-w-xs focus:outline-none focus:ring-2 focus:ring-orbit-green/40"
+            className={`${fieldSelectClass} min-w-[240px] max-w-xs font-medium`}
           >
             <option value="all">All questions (aggregated)</option>
             {competencyQuestions.map((q) => (

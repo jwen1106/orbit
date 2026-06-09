@@ -66,12 +66,10 @@ export async function PUT(
     if (body.function) teamUpdates.function = body.function;
     if (body.size) teamUpdates.size = Number(body.size);
 
-    // Update team document
     if (Object.keys(teamUpdates).length > 0) {
       await adminDb.collection('teams').doc(params.id).update(teamUpdates);
     }
 
-    // Update manager in Firebase Auth and Firestore users doc if provided
     if (body.managerName?.trim() || body.managerEmail?.trim() || body.managerPassword) {
       const teamDoc = await adminDb.collection('teams').doc(params.id).get();
       const managerId = teamDoc.data()?.managerId;
@@ -109,5 +107,24 @@ export async function PUT(
   } catch (err) {
     console.error('[teams/[id] PUT]', err);
     return NextResponse.json({ error: 'Failed to update team' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  if (!(await checkAdmin(req))) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  }
+  try {
+    const { deleteTeam } = await import('@/lib/delete-organisation');
+    await deleteTeam(params.id);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[teams/[id] DELETE]', err);
+    const message = err instanceof Error ? err.message : 'Failed to delete team';
+    const status = message === 'Team not found' ? 404 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

@@ -103,17 +103,14 @@ export default function TeamDashboardView({
   selectedSurveyId,
   surveyPickerBaseUrl,
 }: TeamDashboardViewProps) {
-  const { overallScore, maturityLabel, strengths, opportunities, pillars, teamName } = data;
+  const { overallScore, maturityLabel, strengths, opportunities, pillars } = data;
 
   return (
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-orbit-dark">HPT Diagnostic Tool</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {teamName} · Current assessment across operational pillars and competencies
-          </p>
+          <h1 className="text-2xl font-bold text-orbit-dark">My Team Dashboard</h1>
         </div>
         {surveys && surveys.length > 0 && surveyPickerBaseUrl && selectedSurveyId ? (
           <SurveySelector
@@ -134,41 +131,76 @@ export default function TeamDashboardView({
       {/* Top summary row */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Overall maturity */}
-        <div className="lg:col-span-3 rounded-xl bg-white border border-gray-200 px-6 py-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Overall Maturity
-          </p>
-          <p
-            className={[
-              'mt-3 leading-none font-bold',
-              overallScore !== null ? 'text-5xl text-orbit-forest' : 'text-2xl text-gray-400 italic',
-            ].join(' ')}
-          >
-            {overallScore !== null ? overallScore.toFixed(1) : DASHBOARD_NOT_AVAILABLE}
-          </p>
-          <p className={`text-sm mt-2 ${placeholderClass(maturityLabel)}`}>
-            Out of 5 ({maturityLabel})
-          </p>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-4">
-            <div
-              className="h-2 bg-orbit-forest/70 rounded-full"
-              style={{ width: overallScore !== null ? `${(overallScore / 5) * 100}%` : '0%' }}
-            />
+        <div className="lg:col-span-3 rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="px-6 pt-5 pb-4 text-center flex flex-col items-center flex-1 bg-gradient-to-b from-orbit-forest/[0.04] to-white">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Overall Maturity
+            </p>
+            {overallScore !== null ? (
+              <>
+                <div className="relative flex items-center justify-center mt-4 mb-2">
+                  {(() => {
+                    const r = 40;
+                    const circumference = 2 * Math.PI * r;
+                    const pct = (overallScore / 5) * 100;
+                    const offset = circumference - (pct / 100) * circumference;
+                    return (
+                      <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r={r} fill="none" stroke="#E8EDE9" strokeWidth="8" />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={r}
+                          fill="none"
+                          stroke="#1A4D23"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={offset}
+                        />
+                      </svg>
+                    );
+                  })()}
+                  <span className="absolute text-4xl font-bold text-orbit-forest tabular-nums leading-none">
+                    {overallScore.toFixed(1)}
+                  </span>
+                </div>
+                <p className={`text-sm font-semibold text-orbit-dark ${placeholderClass(maturityLabel)}`}>
+                  {maturityLabel}
+                </p>
+                <p className="text-2xs text-gray-400 mt-0.5">Out of 5</p>
+              </>
+            ) : (
+              <>
+                <p className="mt-4 text-lg text-gray-400 italic">{DASHBOARD_NOT_AVAILABLE}</p>
+                <p className={`text-sm mt-2 ${placeholderClass(maturityLabel)}`}>
+                  Out of 5 ({maturityLabel})
+                </p>
+              </>
+            )}
+            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mt-4">
+              <div
+                className="h-2 bg-orbit-forest/70 rounded-full transition-all duration-500"
+                style={{ width: overallScore !== null ? `${(overallScore / 5) * 100}%` : '0%' }}
+              />
+            </div>
           </div>
-          <Link
-            href={analysisHref}
-            className="mt-4 w-full inline-flex items-center justify-center px-3 py-2 text-sm font-semibold rounded-md bg-orbit-forest text-white hover:bg-orbit-green transition-colors"
-          >
-            View for detailed analysis
-          </Link>
-          {deltaHref && (
+          <div className="px-6 pb-5 pt-3 w-full border-t border-gray-100">
             <Link
-              href={deltaHref}
-              className="mt-2 w-full inline-flex items-center justify-center px-3 py-2 text-sm font-semibold rounded-md border border-orbit-forest text-orbit-forest hover:bg-orbit-forest/[0.04] transition-colors"
+              href={analysisHref}
+              className="w-full inline-flex items-center justify-center px-3 py-2 text-sm font-semibold rounded-md bg-orbit-forest text-white hover:bg-orbit-green transition-colors"
             >
-              Manager &amp; Member Analysis
+              View for detailed analysis
             </Link>
-          )}
+            {deltaHref && (
+              <Link
+                href={deltaHref}
+                className="mt-2 w-full inline-flex items-center justify-center px-3 py-2 text-sm font-semibold rounded-md border border-orbit-forest text-orbit-forest hover:bg-orbit-forest/[0.04] transition-colors"
+              >
+                Manager &amp; Member Analysis
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Top 3 Strengths & Opportunities — equal width */}

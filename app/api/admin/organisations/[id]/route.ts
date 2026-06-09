@@ -55,3 +55,22 @@ export async function PUT(
     return NextResponse.json({ error: 'Failed to update organisation' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  if (!(await checkAdmin(req))) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  }
+  try {
+    const { deleteOrganisation } = await import('@/lib/delete-organisation');
+    await deleteOrganisation(params.id);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[organisations/[id] DELETE]', err);
+    const message = err instanceof Error ? err.message : 'Failed to delete organisation';
+    const status = message === 'Organisation not found' ? 404 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
+}

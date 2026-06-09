@@ -42,10 +42,7 @@ export default async function DashboardPage({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-orbit-dark">HPT Diagnostic Tool</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Current assessment across operational pillars and competencies
-          </p>
+          <h1 className="text-2xl font-bold text-orbit-dark">My Team Dashboard</h1>
         </div>
         <div className="rounded-xl bg-white border border-gray-200 px-8 py-16 text-center">
           <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">

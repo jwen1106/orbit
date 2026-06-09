@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import { fieldInputClass, fieldLabelClass } from '@/lib/field-styles';
 
 interface OrgOption {
   id: string;
@@ -280,10 +281,10 @@ export default function NewEngagementPage() {
 
           {/* Survey title */}
           <div className="rounded-xl border border-gray-200 bg-white px-6 py-5">
-            <label className="block text-sm font-semibold text-orbit-dark mb-1">
+            <label className={fieldLabelClass}>
               Survey Title <span className="text-gray-400 font-normal text-xs">(optional)</span>
             </label>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs text-gray-500 mb-3 text-center">
               Give this survey a name to distinguish it from other engagements for the same team — e.g. &ldquo;Q1 2026 Assessment&rdquo; or &ldquo;Post-restructure Review&rdquo;.
             </p>
             <input
@@ -291,7 +292,7 @@ export default function NewEngagementPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Q1 2026 Operational Assessment"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-orbit-dark placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+              className={fieldInputClass}
             />
           </div>
 

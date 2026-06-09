@@ -159,9 +159,9 @@ export const COMPETENCY_LABELS: Record<Competency, string> = {
 };
 
 export const COMPETENCY_ICONS: Record<Competency, string> = {
-  people_relationships: '??',
-  growth_impact: '??',
-  purpose_alignment: '??',
+  people_relationships: '👥',
+  growth_impact: '🌱',
+  purpose_alignment: '🎯',
 };
 
 export const INDUSTRIES = [

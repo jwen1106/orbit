@@ -6,6 +6,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import type { Question } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
+import { fieldSelectClass } from '@/lib/field-styles';
 
 const competencyOptions = [
   { value: 'all', label: 'All competencies' },
@@ -73,26 +74,30 @@ export default function QuestionsPage() {
         </Link>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
-        <select
-          value={filterComp}
-          onChange={(e) => setFilterComp(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-green"
-        >
-          {competencyOptions.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-        <select
-          value={filterRole}
-          onChange={(e) => setFilterRole(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-green"
-        >
-          {roleOptions.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-        <span className="text-xs text-gray-400 self-center ml-1">
+      <div className="flex items-center gap-4 w-full">
+        <div className="grid grid-cols-2 gap-3 flex-1 min-w-0">
+          <select
+            value={filterComp}
+            onChange={(e) => setFilterComp(e.target.value)}
+            className={fieldSelectClass}
+            aria-label="Filter by competency"
+          >
+            {competencyOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <select
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+            className={fieldSelectClass}
+            aria-label="Filter by role"
+          >
+            {roleOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+        <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
           {filtered.length} shown
         </span>
       </div>

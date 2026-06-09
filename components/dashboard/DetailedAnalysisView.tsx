@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { Competency } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
+import { fieldReadOnlyClass, fieldSelectCompactClass } from '@/lib/field-styles';
 import {
   DASHBOARD_NOT_AVAILABLE,
   type DetailedAnalysisData,
@@ -406,7 +407,7 @@ export default function DetailedAnalysisView({
             baseUrl={surveyPickerBaseUrl}
           />
         ) : (
-          <span className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-orbit-dark font-semibold min-w-[180px] max-w-[280px] truncate">
+          <span className={`${fieldReadOnlyClass} text-sm font-semibold min-w-[180px] max-w-[280px] truncate`}>
             {engagementTitle}
           </span>
         )}
@@ -531,7 +532,7 @@ export default function DetailedAnalysisView({
               id="pillar-select"
               value={selectedPillar}
               onChange={(e) => setSelectedPillar(e.target.value as Competency | 'all')}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-orbit-dark font-semibold"
+              className={`${fieldSelectCompactClass} font-semibold`}
             >
               <option value="all">All Pillars</option>
               {COMPETENCIES.map((c) => (

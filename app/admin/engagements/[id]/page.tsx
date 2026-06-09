@@ -11,6 +11,11 @@ import CompletionDonut from '@/components/admin/CompletionDonut';
 import SurveyResponsesList from '@/components/admin/SurveyResponsesList';
 import type { Engagement, Respondent, Question, Competency } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
+import {
+  fieldInputClass,
+  fieldLabelCompactClass,
+  fieldSelectClass,
+} from '@/lib/field-styles';
 
 interface EngagementDetail extends Engagement {
   teamName: string;
@@ -193,14 +198,14 @@ export default function EngagementDetailPage() {
 
               {/* Organisation select */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Organisation</label>
+                <label className={fieldLabelCompactClass}>Organisation</label>
                 {loadingOrgs ? (
-                  <p className="text-xs text-gray-400">Loading…</p>
+                  <p className="text-xs text-gray-400 text-center">Loading…</p>
                 ) : (
                   <select
                     value={draftOrgId}
                     onChange={(e) => onDraftOrgChange(e.target.value)}
-                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+                    className={fieldSelectClass}
                   >
                     <option value="">Select organisation…</option>
                     {allOrgs.map((o) => (
@@ -212,15 +217,15 @@ export default function EngagementDetailPage() {
 
               {/* Team select */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Team</label>
+                <label className={fieldLabelCompactClass}>Team</label>
                 {loadingOrgTeams ? (
-                  <p className="text-xs text-gray-400">Loading teams…</p>
+                  <p className="text-xs text-gray-400 text-center">Loading teams…</p>
                 ) : (
                   <select
                     value={draftTeamId}
                     onChange={(e) => setDraftTeamId(e.target.value)}
                     disabled={!draftOrgId || orgTeams.length === 0}
-                    className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orbit-forest disabled:opacity-50"
+                    className={fieldSelectClass}
                   >
                     <option value="">Select team…</option>
                     {orgTeams.map((t) => (
@@ -328,7 +333,7 @@ export default function EngagementDetailPage() {
                   onBlur={saveTitle}
                   onKeyDown={(e) => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditingTitle(false); }}
                   placeholder="e.g. Q1 2026 Operational Assessment"
-                  className="flex-1 text-sm border border-orbit-forest rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orbit-forest text-orbit-dark"
+                  className={`${fieldInputClass} flex-1 border-orbit-forest/40 focus:border-orbit-forest`}
                 />
                 <button onClick={saveTitle} disabled={savingTitle} className="text-xs font-semibold text-orbit-forest hover:underline whitespace-nowrap">
                   {savingTitle ? 'Saving…' : 'Save'}
