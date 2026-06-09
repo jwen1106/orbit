@@ -15,6 +15,7 @@ import { COMPETENCY_LABELS } from '@/types';
 interface EngagementDetail extends Engagement {
   teamName: string;
   orgName: string;
+  teamSize: number;
   respondents: Respondent[];
 }
 
@@ -171,10 +172,10 @@ export default function EngagementDetailPage() {
   const managerRespondents = data.respondents.filter((r) => r.role === 'manager');
   const memberCompleted = memberRespondents.filter((r) => r.status === 'completed').length;
   const memberInProgress = memberRespondents.filter((r) => r.status === 'in_progress').length;
-  const memberNotStarted = memberRespondents.filter((r) => r.status === 'invited').length;
-  const memberTotal = memberRespondents.length;
-  const percentComplete = memberTotal > 0
-    ? Math.round((memberCompleted / memberTotal) * 100)
+  // Use team size as the denominator; fall back to actual respondent count if not set
+  const teamSize = data.teamSize > 0 ? data.teamSize : memberRespondents.length;
+  const percentComplete = teamSize > 0
+    ? Math.round((memberCompleted / teamSize) * 100)
     : 0;
   const managerComplete = managerRespondents.some((r) => r.status === 'completed');
 
@@ -257,7 +258,7 @@ export default function EngagementDetailPage() {
           <div className="flex items-center gap-3 mt-2">
             <Badge variant={data.status} />
             <span className="text-sm text-gray-500">
-              {memberCompleted} of {memberTotal} anonymous member response{memberTotal !== 1 ? 's' : ''} complete
+              {memberCompleted} of {teamSize} team member{teamSize !== 1 ? 's' : ''} completed
               {managerRespondents.length > 0 && (
                 <> · Manager {managerComplete ? 'complete' : 'pending'}</>
               )}
@@ -414,16 +415,19 @@ export default function EngagementDetailPage() {
                   <span className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
                   Not started
                 </span>
-                <span className="font-semibold text-orbit-dark">{memberNotStarted}</span>
+                <span className="font-semibold text-orbit-dark">
+                  {Math.max(0, teamSize - memberCompleted - memberInProgress)}
+                </span>
               </div>
             </div>
-            {memberTotal === 0 ? (
+            {memberCompleted === 0 ? (
               <p className="text-xs text-gray-400 text-center leading-relaxed">
-                No responses yet. Share the member link to begin collecting anonymous submissions.
+                No responses yet. Share the member link to begin collecting submissions.
               </p>
             ) : (
               <p className="text-xs text-gray-400 text-center leading-relaxed">
-                {memberTotal} anonymous submission{memberTotal !== 1 ? 's' : ''} recorded
+                {memberCompleted} of {teamSize} team member{teamSize !== 1 ? 's' : ''} completed
+                {data.teamSize > 0 && <><br /><span className="text-orbit-forest font-semibold">(team size: {data.teamSize})</span></>}
               </p>
             )}
             {managerRespondents.length > 0 && (

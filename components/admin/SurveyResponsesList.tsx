@@ -53,7 +53,11 @@ export default function SurveyResponsesList({ engagementId, respondents, onUpdat
     }
   }
 
-  const displayed = respondents.filter((r) => r.status === 'completed' || r.status === 'in_progress');
+  // Show all respondents including invited (not started) so they can be cleaned up
+  const displayed = [...respondents].sort((a, b) => {
+    const order = { completed: 0, in_progress: 1, invited: 2 };
+    return (order[a.status as keyof typeof order] ?? 3) - (order[b.status as keyof typeof order] ?? 3);
+  });
 
   return (
     <div className="mt-5 pt-4 border-t border-gray-100">
@@ -64,6 +68,8 @@ export default function SurveyResponsesList({ engagementId, respondents, onUpdat
             {displayed.filter((r) => r.status === 'completed').length} completed
             {displayed.filter((r) => r.status === 'in_progress').length > 0 &&
               ` · ${displayed.filter((r) => r.status === 'in_progress').length} in progress`}
+            {displayed.filter((r) => r.status === 'invited').length > 0 &&
+              ` · ${displayed.filter((r) => r.status === 'invited').length} not started`}
           </p>
         </div>
       </div>
@@ -109,7 +115,9 @@ export default function SurveyResponsesList({ engagementId, respondents, onUpdat
                   <td className="px-3 py-2.5 text-gray-500">
                     {r.status === 'completed'
                       ? formatDateTime(r.completedAt)
-                      : <span className="italic text-amber-600">In progress</span>}
+                      : r.status === 'in_progress'
+                      ? <span className="italic text-amber-600">In progress</span>
+                      : <span className="italic text-gray-400">Not started</span>}
                   </td>
                   <td className="px-3 py-2.5 text-right">
                     <button

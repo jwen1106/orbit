@@ -36,9 +36,11 @@ export async function GET(
         return a.name.localeCompare(b.name);
       });
 
+    const teamData = teamDoc.data() as Team | undefined;
     return NextResponse.json({
       ...engagement,
-      teamName: (teamDoc.data() as Team)?.name ?? '—',
+      teamName: teamData?.name ?? '—',
+      teamSize: teamData?.size ?? 0,
       orgName: (orgDoc.data() as Organisation)?.name ?? '—',
       respondents,
     });
