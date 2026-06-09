@@ -359,13 +359,6 @@ export default function DetailedAnalysisView({
         </div>
       </div>
 
-      {showAnalysisBanner && !data.hasFullAnalysis && (
-        <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-          Insights, quick wins, and Oaklin support recommendations will populate once AI analysis
-          has been run. Score distributions will update as survey responses come in.
-        </div>
-      )}
-
       {/* Main layout: radar left + question cards right */}
       <div className="flex gap-4 items-start">
 
