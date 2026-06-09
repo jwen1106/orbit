@@ -562,6 +562,44 @@ function roundedAvg(scores: number[]): number | null {
   return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
 }
 
+function buildPlaceholderQuestionBreakdowns(questions: Record<string, Question>): QuestionBreakdown[] {
+  const EMPTY_DIST: ScoreDistributionItem[] = [1, 2, 3, 4, 5].map((level) => ({
+    level,
+    pct: null,
+  }));
+  return Object.entries(questions)
+    .map(([qId, q]) => ({
+      questionId: qId,
+      questionText: q.text,
+      questionSubtext: q.subtext,
+      competency: q.competency,
+      order: q.order,
+      criteria: q.criteria,
+      overallScore: null,
+      managerScore: null,
+      memberScore: null,
+      respondentCount: 0,
+      managerCount: 0,
+      memberCount: 0,
+      delta: null,
+      overallDistribution: EMPTY_DIST,
+      managerDistribution: EMPTY_DIST,
+      memberDistribution: EMPTY_DIST,
+      managerCriteriaLabel: null,
+      memberCriteriaLabel: null,
+    }))
+    .sort((a, b) => {
+      const COMP_ORDER: Record<string, number> = {
+        people_relationships: 0,
+        growth_impact: 1,
+        purpose_alignment: 2,
+      };
+      const compDiff = (COMP_ORDER[a.competency] ?? 99) - (COMP_ORDER[b.competency] ?? 99);
+      if (compDiff !== 0) return compDiff;
+      return a.order - b.order;
+    });
+}
+
 function buildQuestionBreakdowns(
   allResponses: { questionId: string; score: number }[],
   managerResponses: { questionId: string; score: number }[],
@@ -744,7 +782,12 @@ export async function getDetailedAnalysisData(
 
   const computed = await computeScoresFromResponses(engagementId, engagement);
   if (!computed) {
-    return buildEmptyDetailedAnalysis(engagementId, team.name);
+    // No responses yet — load questions anyway so the page shows placeholders
+    const questions = await loadQuestions(engagement);
+    return {
+      ...buildEmptyDetailedAnalysis(engagementId, team.name),
+      questionBreakdowns: buildPlaceholderQuestionBreakdowns(questions),
+    };
   }
 
   const {
