@@ -12,11 +12,38 @@ import {
 } from '@/lib/dashboard-types';
 import RadarChartWrapper, { type WrapperDataPoint } from '@/components/charts/RadarChartWrapper';
 
-const COMPETENCY_ICONS: Record<Competency, string> = {
-  people_relationships: '👥',
-  growth_impact: '🌱',
-  purpose_alignment: '🎯',
-};
+// SVG icon components — green circle with white icon
+function CompetencyIcon({ competency, size = 'md' }: { competency: Competency; size?: 'sm' | 'md' | 'lg' }) {
+  const circle = size === 'lg' ? 'w-12 h-12' : size === 'sm' ? 'w-7 h-7' : 'w-9 h-9';
+  const icon = size === 'lg' ? 'w-6 h-6' : size === 'sm' ? 'w-3.5 h-3.5' : 'w-4.5 h-4.5';
+
+  const paths: Record<Competency, React.ReactNode> = {
+    people_relationships: (
+      <svg className={`${icon} text-white`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+          d="M17 20h5v-2a4 4 0 00-5.916-3.519M17 20H7m10 0v-2a5.978 5.978 0 00-.94-3.254M7 20H2v-2a4 4 0 015.916-3.519M7 20v-2c0-1.116.384-2.142 1.024-2.957M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM3 10a2 2 0 114 0 2 2 0 01-4 0z" />
+      </svg>
+    ),
+    growth_impact: (
+      <svg className={`${icon} text-white`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+      </svg>
+    ),
+    purpose_alignment: (
+      <svg className={`${icon} text-white`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+  };
+
+  return (
+    <div className={`${circle} rounded-full bg-orbit-forest flex items-center justify-center flex-shrink-0`}>
+      {paths[competency]}
+    </div>
+  );
+}
 
 const COMPETENCY_COLORS: Record<Competency, { border: string; bg: string; text: string; pill: string }> = {
   people_relationships: {
@@ -216,7 +243,7 @@ function CompetencyCard({ competency, breakdown, actionCount }: {
       <div className={`px-5 py-4 ${colors.bg} border-b ${colors.border} border-opacity-30`}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-xl">{COMPETENCY_ICONS[competency]}</span>
+            <CompetencyIcon competency={competency} size="sm" />
             <h3 className="text-sm font-bold text-orbit-dark leading-snug">
               {COMPETENCY_LABELS[competency]}
             </h3>
@@ -451,7 +478,7 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
               const colors = COMPETENCY_COLORS[c];
               return (
                 <div key={c} className={`rounded-lg border ${colors.border} ${colors.bg} px-4 py-3 flex items-center gap-3`}>
-                  <span className="text-lg">{COMPETENCY_ICONS[c]}</span>
+                  <CompetencyIcon competency={c} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-orbit-dark truncate">{COMPETENCY_LABELS[c]}</p>
                     <div className="flex items-center gap-2 mt-1">
@@ -483,9 +510,12 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
               return (
                 <div key={i} className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden">
                   <div className={`px-4 py-1.5 ${colors.bg}`}>
-                    <p className={`text-2xs font-semibold uppercase tracking-wide ${colors.text}`}>
-                      {COMPETENCY_ICONS[action.competency]} {COMPETENCY_LABELS[action.competency]}
-                    </p>
+                    <div className={`flex items-center gap-1.5`}>
+                      <CompetencyIcon competency={action.competency} size="sm" />
+                      <p className={`text-2xs font-semibold uppercase tracking-wide ${colors.text}`}>
+                        {COMPETENCY_LABELS[action.competency]}
+                      </p>
+                    </div>
                   </div>
                   <div className="px-4 py-3">
                     <p className="text-xs font-bold text-orbit-dark leading-snug">
@@ -566,8 +596,10 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
             <div key={competency}>
               {/* Section band */}
               <div className={`bg-orbit-forest rounded-t-xl px-5 py-3 flex items-center justify-between`}>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{COMPETENCY_ICONS[competency]}</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <CompetencyIcon competency={competency} size="sm" />
+                  </div>
                   <h2 className="text-sm font-bold text-white">{COMPETENCY_LABELS[competency]}</h2>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
