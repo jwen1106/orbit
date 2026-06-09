@@ -3,7 +3,6 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Link from 'next/link';
 import type { Engagement, Team, Organisation } from '@/types';
-import { COMPETENCY_LABELS } from '@/types';
 import AdminCsvExport from '@/components/admin/AdminCsvExport';
 
 async function getDashboardData() {
@@ -79,8 +78,6 @@ async function getDashboardData() {
 
   return { orgs, teams, engagements, stats };
 }
-
-const COMPETENCIES = ['people_relationships', 'growth_impact', 'purpose_alignment'] as const;
 
 export default async function AdminDashboard() {
   const { orgs, teams, engagements, stats } = await getDashboardData();
@@ -160,22 +157,19 @@ export default async function AdminDashboard() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="px-4 py-3 text-left font-semibold text-gray-600 w-10">#</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Organisation</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Team</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Industry</th>
-                <th className="px-6 py-3 text-left font-semibold text-gray-600">Status</th>
-                {COMPETENCIES.map((c) => (
-                  <th key={c} className="px-4 py-3 text-center font-semibold text-gray-600 text-xs">
-                    {COMPETENCY_LABELS[c]}
-                  </th>
-                ))}
-                <th className="px-6 py-3" />
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Survey Status</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Manage</th>
+                <th className="px-6 py-3 text-left font-semibold text-gray-600">Export to CSV</th>
               </tr>
             </thead>
             <tbody>
               {engagements.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-400 text-sm">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-400 text-sm">
                     No engagements yet.{' '}
                     <Link href="/admin/engagements/new" className="text-orbit-green hover:underline font-semibold">
                       Create one
@@ -183,33 +177,33 @@ export default async function AdminDashboard() {
                   </td>
                 </tr>
               ) : (
-                engagements.map((eng) => (
+                engagements.map((eng, i) => (
                   <tr key={eng.id} className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors">
+                    <td className="px-4 py-3 text-gray-400 text-xs tabular-nums">{i + 1}</td>
                     <td className="px-6 py-3 font-medium text-orbit-dark">{eng.orgName}</td>
                     <td className="px-6 py-3 text-gray-600">{eng.teamName}</td>
                     <td className="px-6 py-3 text-gray-500 text-xs">{eng.industry}</td>
                     <td className="px-6 py-3">
                       <Badge variant={eng.status} />
                     </td>
-                    {COMPETENCIES.map((c) => (
-                      <td key={c} className="px-4 py-3 text-center font-bold text-orbit-forest">
-                        {eng.scores?.[c] != null ? (eng.scores[c] as number).toFixed(1) : '—'}
-                      </td>
-                    ))}
-                    <td className="px-6 py-3 text-right whitespace-nowrap">
+                    <td className="px-6 py-3">
                       <Link
                         href={`/admin/engagements/${eng.id}`}
-                        className="text-orbit-green hover:underline text-xs font-semibold mr-3"
+                        className="text-orbit-green hover:underline text-xs font-semibold"
                       >
-                        Manage
+                        Manage →
                       </Link>
-                      {eng.status === 'analysed' && (
+                    </td>
+                    <td className="px-6 py-3">
+                      {eng.status === 'analysed' ? (
                         <a
                           href={`/api/admin/export/${eng.id}`}
-                          className="text-gray-400 hover:text-orbit-forest text-xs"
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-orbit-forest hover:underline"
                         >
-                          CSV
+                          ↓ CSV
                         </a>
+                      ) : (
+                        <span className="text-xs text-gray-300">—</span>
                       )}
                     </td>
                   </tr>
