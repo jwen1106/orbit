@@ -12,6 +12,21 @@
   }
 }
 
+@media print {
+  /* Hide the nav bar and sticky toolbar when printing */
+  header {
+    display: none !important;
+  }
+  /* Remove page background colour so paper looks clean */
+  body {
+    background-color: white !important;
+  }
+  /* Avoid page breaks inside cards */
+  .rounded-xl, .rounded-lg {
+    break-inside: avoid;
+  }
+}
+
 @layer components {
   .orbit-card {
     @apply bg-white rounded-lg border border-gray-200 shadow-sm;
