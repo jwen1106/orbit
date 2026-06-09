@@ -3,15 +3,12 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import OrbitLogo from './OrbitLogo';
+import { clearPlatformSession } from '@/lib/auth-client';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', exact: true },
-  { href: '/dashboard/analysis', label: 'Competencies' },
-  { href: '/dashboard/delta', label: 'Delta Analysis' },
   { href: '/dashboard/benchmarks', label: 'Benchmarks' },
   { href: '/dashboard/action-plan', label: 'Action Plan' },
-  { href: '/dashboard/timeline', label: 'Timeline' },
-  { href: '/dashboard/export', label: 'Export Report' },
 ];
 
 interface ManagerNavProps {
@@ -24,8 +21,9 @@ export default function ManagerNav({ userName, userEmail }: ManagerNavProps) {
   const router = useRouter();
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
+    await clearPlatformSession();
+    router.push('/');
+    router.refresh();
   }
 
   function isActive(href: string, exact?: boolean) {
@@ -67,12 +65,17 @@ export default function ManagerNav({ userName, userEmail }: ManagerNavProps) {
             <p className="text-xs font-semibold text-white leading-tight">{userName}</p>
             <p className="text-2xs text-green-200">{userEmail}</p>
           </div>
-          <button
-            onClick={handleLogout}
-            title="Log out"
-            className="h-8 w-8 rounded-full bg-orbit-green flex items-center justify-center text-xs font-bold text-white hover:bg-green-600 transition-colors"
+          <span
+            className="h-8 w-8 rounded-full bg-orbit-green flex items-center justify-center text-xs font-bold text-white md:hidden"
+            aria-hidden="true"
           >
             {initials}
+          </span>
+          <button
+            onClick={handleLogout}
+            className="text-xs text-green-200 hover:text-white transition-colors px-2 py-1 rounded hover:bg-orbit-green/40 font-semibold"
+          >
+            Log out
           </button>
         </div>
       </div>

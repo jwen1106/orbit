@@ -14,11 +14,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // No session at all — send to login
+  // No session — send to home page (sign in via View Results card)
   if (!sessionCookie) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(loginUrl);
+    const homeUrl = new URL('/', request.url);
+    homeUrl.searchParams.set('from', pathname);
+    return NextResponse.redirect(homeUrl);
   }
 
   try {
@@ -28,34 +28,31 @@ export async function middleware(request: NextRequest) {
     });
 
     if (!verifyRes.ok) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('from', pathname);
-      return NextResponse.redirect(loginUrl);
+      const homeUrl = new URL('/', request.url);
+      homeUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(homeUrl);
     }
 
     const { role } = await verifyRes.json();
 
-    // Admin trying to access /dashboard/* — send to admin home
     if (isDashboardRoute && role === 'oaklin_admin') {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
 
-    // Team manager trying to access /admin/* — send to their dashboard
     if (isAdminRoute && role === 'team_manager') {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
-    // Unknown role — send to login
     if (isAdminRoute && role !== 'oaklin_admin') {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
     }
     if (isDashboardRoute && role !== 'team_manager') {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
     }
 
     return NextResponse.next();
   } catch {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 }
 

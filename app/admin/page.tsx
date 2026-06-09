@@ -67,11 +67,16 @@ async function getDashboardData() {
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const totalFte = teamsSnap.docs.reduce((sum, d) => {
+    const size = (d.data() as Team).size;
+    return sum + (typeof size === 'number' && size > 0 ? size : 0);
+  }, 0);
+
   const stats = {
     organisations: orgsSnap.size,
     teams: teamsSnap.size,
+    totalFte,
     total: engSnap.size,
-    draft: rawEngagements.filter((e) => e.status === 'draft').length,
     active: rawEngagements.filter((e) => e.status === 'active').length,
     closed: rawEngagements.filter((e) => e.status === 'closed' || e.status === 'analysed').length,
     analysed: rawEngagements.filter((e) => e.status === 'analysed').length,
@@ -154,15 +159,15 @@ export default async function AdminDashboard() {
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Teams</p>
         </div>
 
-        {/* Draft Surveys */}
+        {/* Total FTE */}
         <div className="rounded-xl bg-white border border-gray-200 shadow-sm px-6 py-6 flex flex-col items-center text-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-3-3v6M5 8h14a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9a2 2 0 012-2zm3-4h6a1 1 0 011 1v1H7V5a1 1 0 011-1z" />
+          <div className="w-12 h-12 rounded-full bg-orbit-forest/10 flex items-center justify-center">
+            <svg className="w-6 h-6 text-orbit-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
-          <p className="text-4xl font-bold text-gray-400">{stats.draft}</p>
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Draft Surveys</p>
+          <p className="text-4xl font-bold text-orbit-forest">{stats.totalFte}</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total FTE</p>
         </div>
 
         {/* Active Surveys */}

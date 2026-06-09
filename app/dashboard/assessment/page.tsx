@@ -35,7 +35,7 @@ async function getAssessmentData(uid: string) {
 
 export default async function AssessmentPage() {
   const session = await verifySession();
-  if (!session) redirect('/login');
+  if (!session) redirect('/');
 
   const data = await getAssessmentData(session.uid);
 

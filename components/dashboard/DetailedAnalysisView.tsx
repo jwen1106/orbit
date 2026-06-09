@@ -11,6 +11,10 @@ import {
   type QuestionBreakdown,
 } from '@/lib/dashboard-types';
 import RadarChartWrapper, { type WrapperDataPoint } from '@/components/charts/RadarChartWrapper';
+import ResponseFrequencyChartWrapper from '@/components/charts/ResponseFrequencyChartWrapper';
+
+const MATURITY_LEVEL_LABELS = ['Ad Hoc', 'Informal', 'Defined', 'Managed', 'Optimised'];
+import SurveySelector, { type SurveyOption } from '@/components/dashboard/SurveySelector';
 
 // SVG icon components — green circle with white icon
 function CompetencyIcon({ competency, size = 'md' }: { competency: Competency; size?: 'sm' | 'md' | 'lg' }) {
@@ -74,25 +78,6 @@ const COMPETENCIES: Competency[] = [
 
 function isNA(text: string | null | undefined) {
   return !text || text === DASHBOARD_NOT_AVAILABLE;
-}
-
-// ─── Response Frequency horizontal bar ───────────────────────────────────────
-function FreqBar({ level, count, maxCount }: { level: number; count: number; maxCount: number }) {
-  const pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
-  const levelLabels = ['Ad Hoc', 'Informal', 'Defined', 'Managed', 'Optimised'];
-  return (
-    <div className="flex items-center gap-3 text-xs">
-      <span className="w-20 text-gray-500 flex-shrink-0">Answer {level}</span>
-      <div className="flex-1 h-5 bg-gray-100 rounded overflow-hidden">
-        <div
-          className="h-full rounded bg-orbit-forest transition-all"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="w-10 text-right text-gray-600 font-semibold tabular-nums flex-shrink-0">{count}</span>
-      <span className="hidden xl:block w-20 text-gray-400 flex-shrink-0">{levelLabels[level - 1]}</span>
-    </div>
-  );
 }
 
 // ─── Distribution bar (for question cards) ───────────────────────────────────
@@ -238,7 +223,7 @@ function CompetencyCard({ competency, breakdown, actionCount }: {
   const quickWin = breakdown?.quickWin;
 
   return (
-    <div className={`rounded-xl bg-white border-2 ${colors.border} shadow-sm overflow-hidden flex flex-col`}>
+    <div className={`rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden flex flex-col`}>
       {/* Card header */}
       <div className={`px-5 py-4 ${colors.bg} border-b ${colors.border} border-opacity-30`}>
         <div className="flex items-center justify-between gap-2">
@@ -300,12 +285,22 @@ interface DetailedAnalysisViewProps {
   data: DetailedAnalysisData;
   backHref: string;
   showAnalysisBanner?: boolean;
+  surveys?: SurveyOption[];
+  selectedSurveyId?: string;
+  surveyPickerBaseUrl?: string;
 }
 
-export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysisViewProps) {
+export default function DetailedAnalysisView({
+  data,
+  backHref,
+  surveys,
+  selectedSurveyId,
+  surveyPickerBaseUrl,
+}: DetailedAnalysisViewProps) {
   const [selectedPillar, setSelectedPillar] = useState<Competency | 'all'>('all');
 
   const {
+    engagementTitle,
     teamName,
     overallScore,
     maturityLabel,
@@ -340,8 +335,12 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
     });
     return totals;
   }, [questionBreakdowns]);
-  const freqMax = Math.max(...Object.values(freqTotals));
   const freqTotal = Object.values(freqTotals).reduce((a, b) => a + b, 0);
+  const freqChartData = [1, 2, 3, 4, 5].map((level) => ({
+    level,
+    label: MATURITY_LEVEL_LABELS[level - 1],
+    count: freqTotals[level] ?? 0,
+  }));
 
   // Count actions per competency (quick wins that are non-null)
   const actionCounts = useMemo(() => {
@@ -377,26 +376,30 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
   const competenciesToShow = selectedPillar === 'all' ? COMPETENCIES : ([selectedPillar] as Competency[]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Link href={backHref} className="text-sm text-orbit-green hover:underline inline-block">
         ← Back to dashboard
       </Link>
 
       {/* Page header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-orbit-dark">Operational Maturity Assessment</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Organisation operational maturity overview — detailed breakdown across all pillars
+            {teamName} · Detailed breakdown across operational pillars and competencies
           </p>
         </div>
-        <select
-          disabled
-          value={teamName}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-orbit-dark font-semibold min-w-[140px]"
-        >
-          <option value={teamName}>{teamName}</option>
-        </select>
+        {surveys && surveys.length > 0 && surveyPickerBaseUrl && selectedSurveyId ? (
+          <SurveySelector
+            surveys={surveys}
+            selectedId={selectedSurveyId}
+            baseUrl={surveyPickerBaseUrl}
+          />
+        ) : (
+          <span className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-orbit-dark font-semibold min-w-[180px] max-w-[280px] truncate">
+            {engagementTitle}
+          </span>
+        )}
       </div>
 
       {/* ── Top section: charts + sidebar ─────────────────────────────────── */}
@@ -406,14 +409,17 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
         <div className="flex-1 min-w-0 space-y-4">
 
           {/* Two-panel chart row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
             {/* Spider diagram */}
-            <div className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-                <p className="text-sm font-bold text-orbit-dark">Overall Maturity &amp; Benchmark</p>
+            <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-orbit-dark">Overall Maturity &amp; Benchmark</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Manager vs member view by competency</p>
+                </div>
                 {overallScore !== null && (
-                  <span className="text-sm font-bold text-orbit-forest">{overallScore.toFixed(1)} / 5</span>
+                  <span className="text-lg font-bold text-orbit-forest tabular-nums">{overallScore.toFixed(1)}</span>
                 )}
               </div>
               {radarData ? (
@@ -430,44 +436,24 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
                 </div>
               )}
               {/* Maturity label strip */}
-              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-3">
-                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="px-6 py-3.5 bg-orbit-forest/[0.04] border-t border-gray-50 flex items-center gap-3">
+                <div className="flex-1 h-1.5 bg-white/80 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-orbit-forest rounded-full"
+                    className="h-full bg-orbit-forest rounded-full transition-all"
                     style={{ width: overallScore !== null ? `${(overallScore / 5) * 100}%` : '0%' }}
                   />
                 </div>
-                <span className="text-xs text-gray-500 flex-shrink-0 font-medium">{maturityLabel}</span>
+                <span className="text-xs text-gray-600 flex-shrink-0 font-medium">{maturityLabel}</span>
               </div>
             </div>
 
-            {/* Response Frequency */}
-            <div className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-                <p className="text-sm font-bold text-orbit-dark">Response Frequency (by Answer)</p>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <span className="w-3 h-3 rounded-sm bg-orbit-forest inline-block" />
-                  Responses
-                </div>
+            {/* Response Frequency — bar chart */}
+            <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-[420px]">
+              <div className="px-6 py-4 border-b border-gray-50">
+                <p className="text-sm font-bold text-orbit-dark">Response Frequency</p>
+                <p className="text-xs text-gray-400 mt-0.5">Distribution of maturity levels across all answers</p>
               </div>
-              <div className="px-5 py-5 space-y-3">
-                {freqTotal === 0 ? (
-                  <div className="py-10 text-center">
-                    <p className="text-sm text-gray-400">No responses recorded yet</p>
-                  </div>
-                ) : (
-                  [1, 2, 3, 4, 5].map((level) => (
-                    <FreqBar key={level} level={level} count={freqTotals[level] ?? 0} maxCount={freqMax} />
-                  ))
-                )}
-              </div>
-              {freqTotal > 0 && (
-                <div className="px-5 pb-4">
-                  <p className="text-xs text-gray-400 border-t border-gray-100 pt-3">
-                    Number of Responses · <span className="font-semibold text-orbit-dark">{freqTotal.toLocaleString()}</span> total responses tracked
-                  </p>
-                </div>
-              )}
+              <ResponseFrequencyChartWrapper data={freqChartData} total={freqTotal} />
             </div>
           </div>
 
@@ -513,7 +499,7 @@ export default function DetailedAnalysisView({ data, backHref }: DetailedAnalysi
       </div>
 
       {/* ── Competency summary cards ───────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {COMPETENCIES.map((c) => (
           <CompetencyCard
             key={c}

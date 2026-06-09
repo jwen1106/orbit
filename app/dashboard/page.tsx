@@ -7,11 +7,15 @@ import { verifySession } from '@/lib/auth';
 import { getManagerDashboardData } from '@/lib/engagement-dashboard';
 import TeamDashboardView from '@/components/dashboard/TeamDashboardView';
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: { engagementId?: string };
+}) {
   const session = await verifySession();
-  if (!session) redirect('/login');
+  if (!session) redirect('/');
 
-  const result = await getManagerDashboardData(session.uid);
+  const result = await getManagerDashboardData(session.uid, searchParams.engagementId);
 
   if (!result) {
     return (
@@ -30,13 +34,15 @@ export default async function DashboardPage() {
     );
   }
 
-  const { team, dashboard, latestEngagement } = result;
+  const { team, dashboard, latestEngagement, surveys, selectedSurveyId } = result;
+
+  const engagementQuery = selectedSurveyId ? `?engagementId=${selectedSurveyId}` : '';
 
   if (!dashboard) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-orbit-dark">My Team Dashboard</h1>
+          <h1 className="text-2xl font-bold text-orbit-dark">HPT Diagnostic Tool</h1>
           <p className="text-sm text-gray-500 mt-1">
             Current assessment across operational pillars and competencies
           </p>
@@ -55,7 +61,7 @@ export default async function DashboardPage() {
           </p>
           {latestEngagement?.status === 'active' && (
             <p className="text-xs text-orbit-green font-semibold mt-3">
-              Survey is live — waiting for responses
+              Survey is still live — results will appear when it is closed
             </p>
           )}
         </div>
@@ -63,5 +69,14 @@ export default async function DashboardPage() {
     );
   }
 
-  return <TeamDashboardView data={dashboard} deltaHref="/dashboard/delta" />;
+  return (
+    <TeamDashboardView
+      data={dashboard}
+      deltaHref={`/dashboard/delta${engagementQuery}`}
+      analysisHref={`/dashboard/analysis${engagementQuery}`}
+      surveys={surveys}
+      selectedSurveyId={selectedSurveyId ?? undefined}
+      surveyPickerBaseUrl="/dashboard"
+    />
+  );
 }

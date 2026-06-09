@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { SESSION_COOKIE_NAME } from '@/lib/auth';
+import { validateManagerPassword } from '@/lib/manager-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,7 +72,7 @@ export async function PUT(
     }
 
     // Update manager in Firebase Auth and Firestore users doc if provided
-    if (body.managerName?.trim() || body.managerEmail?.trim()) {
+    if (body.managerName?.trim() || body.managerEmail?.trim() || body.managerPassword) {
       const teamDoc = await adminDb.collection('teams').doc(params.id).get();
       const managerId = teamDoc.data()?.managerId;
 
@@ -87,9 +88,20 @@ export async function PUT(
           authUpdates.email = body.managerEmail.trim();
           userUpdates.email = body.managerEmail.trim();
         }
+        if (body.managerPassword) {
+          const passwordError = validateManagerPassword(body.managerPassword);
+          if (passwordError) {
+            return NextResponse.json({ error: passwordError }, { status: 400 });
+          }
+          authUpdates.password = body.managerPassword;
+        }
 
-        await adminAuth.updateUser(managerId, authUpdates);
-        await adminDb.collection('users').doc(managerId).update(userUpdates);
+        if (Object.keys(authUpdates).length > 0) {
+          await adminAuth.updateUser(managerId, authUpdates);
+        }
+        if (Object.keys(userUpdates).length > 0) {
+          await adminDb.collection('users').doc(managerId).update(userUpdates);
+        }
       }
     }
 

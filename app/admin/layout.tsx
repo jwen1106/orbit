@@ -8,7 +8,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await verifySession();
-  if (!session || session.role !== 'oaklin_admin') redirect('/login');
+  if (!session || session.role !== 'oaklin_admin') redirect('/');
 
   return (
     <div className="min-h-screen bg-orbit-offwhite flex flex-col">

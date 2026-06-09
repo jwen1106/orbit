@@ -78,27 +78,20 @@ export default async function OrgActionPlanPage({
   try {
     await requireAdmin();
   } catch {
-    redirect('/login');
+    redirect('/');
   }
 
   const filterTeamId = searchParams.teamId;
   const data = await getData(params.id, filterTeamId);
   if (!data) notFound();
   const { org, teams, actions } = data;
-  const teamName = teams[0]?.name;
-
   return (
     <div className="space-y-6">
       <div>
         <Link href="/admin/organisations" className="text-sm text-orbit-green hover:underline">
           ← Organisations
         </Link>
-        <h1 className="text-2xl font-bold text-orbit-dark mt-1">
-          Action Plan{teamName ? ` — ${teamName}` : ''}
-        </h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {org.name} · Define specific, measurable actions tied to maturity assessment results
-        </p>
+        <h1 className="text-2xl font-bold text-orbit-dark mt-1">Action Plan</h1>
       </div>
 
       <ActionPlanView

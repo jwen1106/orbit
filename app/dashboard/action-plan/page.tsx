@@ -1,37 +1,90 @@
 import { redirect } from 'next/navigation';
 import { verifySession } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase-admin';
-import type { ActionItem, Team } from '@/types';
-import ActionPlanClient from '@/components/dashboard/ActionPlanClient';
+import type { Organisation } from '@/types';
+import ActionPlanView from '@/components/admin/ActionPlanView';
+import type { SerializedActionItem, SerializedTeam } from '@/components/admin/ActionPlanView';
 
-async function getActionPlanData(uid: string) {
+async function getManagerActionPlanData(uid: string) {
   const teamsSnap = await adminDb.collection('teams').where('managerId', '==', uid).limit(1).get();
   if (teamsSnap.empty) return null;
-  const team = { id: teamsSnap.docs[0].id, ...teamsSnap.docs[0].data() } as Team;
+
+  const teamDoc = teamsSnap.docs[0];
+  const teamData = teamDoc.data();
+  const orgId = teamData.organisationId as string;
+
+  const orgDoc = await adminDb.collection('organisations').doc(orgId).get();
+  if (!orgDoc.exists) return null;
+
+  const org = { id: orgDoc.id, ...orgDoc.data() } as Organisation;
+
+  const team: SerializedTeam = {
+    id: teamDoc.id,
+    name: teamData.name ?? '',
+    organisationId: orgId,
+    function: teamData.function ?? 'front',
+    size: teamData.size ?? 0,
+    managerId: teamData.managerId ?? uid,
+  };
 
   const actionsSnap = await adminDb
     .collection('actionItems')
-    .where('teamId', '==', team.id)
-    .orderBy('timeframe')
-    .orderBy('priority')
+    .where('teamId', '==', teamDoc.id)
     .get();
 
-  const actions = actionsSnap.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-    dueDate: d.data().dueDate?.toDate?.()?.toISOString() ?? null,
-    createdAt: d.data().createdAt?.toDate?.()?.toISOString() ?? null,
-    updatedAt: d.data().updatedAt?.toDate?.()?.toISOString() ?? null,
-  })) as (ActionItem & { dueDate: string | null; createdAt: string | null; updatedAt: string | null })[];
+  const actions: SerializedActionItem[] = actionsSnap.docs
+    .map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        title: data.title ?? '',
+        description: data.description ?? '',
+        competency: data.competency ?? 'people_relationships',
+        timeframe: data.timeframe ?? 'short_term',
+        teamId: data.teamId ?? teamDoc.id,
+        organisationId: data.organisationId ?? orgId,
+        assignedTo: data.assignedTo ?? '',
+        completionPct: data.completionPct ?? 0,
+        comments: data.comments ?? '',
+        status: data.status ?? 'not_started',
+        source: data.source ?? 'manual',
+        priority: data.priority ?? 0,
+      } as SerializedActionItem;
+    })
+    .sort((a, b) => a.priority - b.priority);
 
-  return { team, actions };
+  return { org, team, actions };
 }
 
 export default async function ActionPlanPage() {
   const session = await verifySession();
-  if (!session) redirect('/login');
+  if (!session) redirect('/');
 
-  const data = await getActionPlanData(session.uid);
+  const data = await getManagerActionPlanData(session.uid);
 
-  return <ActionPlanClient data={data} />;
+  if (!data) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-orbit-dark">Action Plan</h1>
+        <div className="rounded-xl border border-gray-200 bg-white px-8 py-16 text-center text-gray-500">
+          No team assigned yet.
+        </div>
+      </div>
+    );
+  }
+
+  const { org, team, actions } = data;
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-orbit-dark">Action Plan</h1>
+
+      <ActionPlanView
+        orgId={org.id}
+        orgName={org.name}
+        teams={[team]}
+        initialActions={actions}
+      />
+    </div>
+  );
 }

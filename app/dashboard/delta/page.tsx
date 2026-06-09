@@ -4,11 +4,15 @@ import { getManagerDetailedAnalysisData } from '@/lib/engagement-dashboard';
 import DeltaAnalysisView from '@/components/dashboard/DeltaAnalysisView';
 import Card from '@/components/ui/Card';
 
-export default async function DeltaPage() {
+export default async function DeltaPage({
+  searchParams,
+}: {
+  searchParams: { engagementId?: string };
+}) {
   const session = await verifySession();
-  if (!session) redirect('/login');
+  if (!session) redirect('/');
 
-  const data = await getManagerDetailedAnalysisData(session.uid);
+  const data = await getManagerDetailedAnalysisData(session.uid, searchParams.engagementId);
 
   if (!data) {
     return (

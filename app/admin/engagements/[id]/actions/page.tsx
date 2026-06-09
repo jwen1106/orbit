@@ -44,9 +44,6 @@ export default async function AdminActionsPage({
           ← Engagement
         </Link>
         <h1 className="text-2xl font-bold text-orbit-dark mt-1">Action Plan</h1>
-        <p className="text-sm text-gray-500">
-          {actions.length} actions · {actions.filter((a) => a.status === 'complete').length} complete
-        </p>
       </div>
 
       {actions.length === 0 ? (

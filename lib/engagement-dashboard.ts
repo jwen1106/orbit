@@ -319,7 +319,7 @@ export async function getEngagementDashboardData(
   if (!engDoc.exists) return null;
 
   const engagement = { id: engDoc.id, ...engDoc.data() } as Engagement;
-  if (engagement.status === 'draft' || engagement.status === 'active') return null;
+  if (engagement.status === 'draft') return null;
 
   const [teamDoc, orgDoc, insightsDoc, actionsSnap] = await Promise.all([
     adminDb.collection('teams').doc(engagement.teamId).get(),
@@ -393,7 +393,7 @@ export async function getEngagementDashboardData(
   };
 }
 
-export async function getManagerDashboardData(uid: string) {
+export async function getManagerDashboardData(uid: string, engagementId?: string) {
   const teamsSnap = await adminDb.collection('teams').where('managerId', '==', uid).get();
   if (teamsSnap.empty) return null;
 
@@ -404,20 +404,42 @@ export async function getManagerDashboardData(uid: string) {
     .where('teamId', '==', team.id)
     .get();
 
-  const engagements = engagementsSnap.docs
+  const allEngagements = engagementsSnap.docs
     .map((d) => ({ id: d.id, ...d.data() } as Engagement))
     .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
 
-  const dashboardEng = engagements.find(
-    (e) => e.status === 'closed' || e.status === 'analysed',
-  );
+  // Managers only see results once the survey is closed or analysed
+  const eligible = allEngagements
+    .filter((e) => e.status === 'closed' || e.status === 'analysed')
+    .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
 
-  if (!dashboardEng) {
-    return { team, dashboard: null as EngagementDashboardData | null, latestEngagement: engagements[0] ?? null };
+  const surveys = eligible.map((e) => ({
+    id: e.id,
+    title: e.title || `${team.name} survey`,
+  }));
+
+  if (eligible.length === 0) {
+    return {
+      team,
+      dashboard: null as EngagementDashboardData | null,
+      latestEngagement: allEngagements[0] ?? null,
+      surveys: [] as { id: string; title: string }[],
+      selectedSurveyId: null as string | null,
+    };
   }
 
-  const dashboard = await getEngagementDashboardData(dashboardEng.id);
-  return { team, dashboard, latestEngagement: dashboardEng };
+  const selected = engagementId
+    ? eligible.find((e) => e.id === engagementId) ?? eligible[0]
+    : eligible[0];
+
+  const dashboard = await getEngagementDashboardData(selected.id);
+  return {
+    team,
+    dashboard,
+    latestEngagement: selected,
+    surveys,
+    selectedSurveyId: selected.id,
+  };
 }
 
 export interface OrgEngagementOption {
@@ -547,9 +569,11 @@ const EMPTY_DISTRIBUTION: ScoreDistributionItem[] = [1, 2, 3, 4, 5].map((level) 
 function buildEmptyDetailedAnalysis(
   engagementId: string,
   teamName: string,
+  engagementTitle?: string,
 ): DetailedAnalysisData {
   return {
     engagementId,
+    engagementTitle: engagementTitle ?? `${teamName} survey`,
     teamName,
     overallScore: null,
     maturityLabel: DASHBOARD_NOT_AVAILABLE,
@@ -750,7 +774,7 @@ export async function getDetailedAnalysisData(
   if (!engDoc.exists) return null;
 
   const engagement = { id: engDoc.id, ...engDoc.data() } as Engagement;
-  if (engagement.status === 'draft' || engagement.status === 'active') return null;
+  if (engagement.status === 'draft') return null;
 
   const [teamDoc, insightsDoc, actionsSnap] = await Promise.all([
     adminDb.collection('teams').doc(engagement.teamId).get(),
@@ -760,6 +784,7 @@ export async function getDetailedAnalysisData(
 
   if (!teamDoc.exists) return null;
   const team = { id: teamDoc.id, ...teamDoc.data() } as Team;
+  const engagementTitle = engagement.title || `${team.name} survey`;
   const actions = actionsSnap.docs
     .map((d) => ({ id: d.id, ...d.data() } as ActionItem))
     .sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
@@ -778,6 +803,7 @@ export async function getDetailedAnalysisData(
 
     return {
       engagementId,
+      engagementTitle,
       teamName: team.name,
       overallScore,
       maturityLabel: maturityLabel(overallScore),
@@ -825,7 +851,7 @@ export async function getDetailedAnalysisData(
     // No responses yet — load questions anyway so the page shows placeholders
     const questions = await loadQuestions(engagement);
     return {
-      ...buildEmptyDetailedAnalysis(engagementId, team.name),
+      ...buildEmptyDetailedAnalysis(engagementId, team.name, engagementTitle),
       questionBreakdowns: buildPlaceholderQuestionBreakdowns(questions),
     };
   }
@@ -845,6 +871,7 @@ export async function getDetailedAnalysisData(
 
   return {
     engagementId,
+    engagementTitle,
     teamName: team.name,
     overallScore,
     maturityLabel: maturityLabel(overallScore),
@@ -876,8 +903,8 @@ export async function getDetailedAnalysisData(
   };
 }
 
-export async function getManagerDetailedAnalysisData(uid: string) {
-  const managerData = await getManagerDashboardData(uid);
+export async function getManagerDetailedAnalysisData(uid: string, engagementId?: string) {
+  const managerData = await getManagerDashboardData(uid, engagementId);
   if (!managerData?.dashboard) return null;
   const analysis = await getDetailedAnalysisData(managerData.dashboard.engagementId);
   return analysis;

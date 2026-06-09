@@ -2,11 +2,14 @@ import { adminDb } from '@/lib/firebase-admin';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import type { Organisation } from '@/types';
+import Badge from '@/components/ui/Badge';
+import type { Organisation, Engagement, EngagementStatus } from '@/types';
 
 interface TeamRow {
   id: string;
   name: string;
+  engagementStatus: EngagementStatus | null;
+  engagementId: string | null;
 }
 
 interface OrgWithTeams extends Organisation {
@@ -14,12 +17,24 @@ interface OrgWithTeams extends Organisation {
 }
 
 async function getOrganisations(): Promise<OrgWithTeams[]> {
-  const snap = await adminDb
-    .collection('organisations')
-    .orderBy('createdAt', 'desc')
-    .get();
+  const [orgSnap, engagementSnap] = await Promise.all([
+    adminDb.collection('organisations').orderBy('createdAt', 'desc').get(),
+    adminDb.collection('engagements').get(),
+  ]);
 
-  const orgs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Organisation));
+  const orgs = orgSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Organisation));
+
+  // Latest engagement per team (by createdAt)
+  const latestByTeam: Record<string, Engagement> = {};
+  for (const d of engagementSnap.docs) {
+    const eng = { id: d.id, ...d.data() } as Engagement;
+    const existing = latestByTeam[eng.teamId];
+    const engTime = eng.createdAt?.toMillis?.() ?? 0;
+    const existingTime = existing?.createdAt?.toMillis?.() ?? 0;
+    if (!existing || engTime > existingTime) {
+      latestByTeam[eng.teamId] = eng;
+    }
+  }
 
   const teamSnaps = await Promise.all(
     orgs.map((org) =>
@@ -30,7 +45,15 @@ async function getOrganisations(): Promise<OrgWithTeams[]> {
   return orgs.map((org, i) => ({
     ...org,
     teams: teamSnaps[i].docs
-      .map((d) => ({ id: d.id, name: d.data().name ?? '—' }))
+      .map((d) => {
+        const latest = latestByTeam[d.id];
+        return {
+          id: d.id,
+          name: d.data().name ?? '—',
+          engagementStatus: latest?.status ?? null,
+          engagementId: latest?.id ?? null,
+        };
+      })
       .sort((a, b) => a.name.localeCompare(b.name)),
   }));
 }
@@ -66,19 +89,20 @@ export default async function OrganisationsPage() {
           <table className="w-full table-fixed text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="w-1/6 px-4 py-3 text-left font-semibold text-gray-600">Name</th>
-                <th className="w-1/6 px-4 py-3 text-left font-semibold text-gray-600">Industry</th>
-                <th className="w-1/6 px-4 py-3 text-left font-semibold text-gray-600">Team</th>
-                <th className="w-1/6 px-4 py-3 text-left font-semibold text-gray-600">Created</th>
-                <th className="w-1/6 px-4 py-3 text-center font-semibold text-gray-600">Dashboard</th>
-                <th className="w-1/6 px-4 py-3 text-center font-semibold text-gray-600">Action Plan</th>
+                <th className="w-[14.2857%] px-4 py-3 text-left font-semibold text-gray-600">Name</th>
+                <th className="w-[14.2857%] px-4 py-3 text-left font-semibold text-gray-600">Industry</th>
+                <th className="w-[14.2857%] px-4 py-3 text-left font-semibold text-gray-600">Team</th>
+                <th className="w-[14.2857%] px-4 py-3 text-left font-semibold text-gray-600">Status</th>
+                <th className="w-[14.2857%] px-4 py-3 text-left font-semibold text-gray-600">Created</th>
+                <th className="w-[14.2857%] px-4 py-3 text-center font-semibold text-gray-600">Dashboard</th>
+                <th className="w-[14.2857%] px-4 py-3 text-center font-semibold text-gray-600">Action Plan</th>
               </tr>
             </thead>
             <tbody>
               {organisations.flatMap((org) => {
                 const teams = org.teams.length > 0
                   ? org.teams
-                  : [{ id: '', name: '—' }];
+                  : [{ id: '', name: '—', engagementStatus: null, engagementId: null }];
 
                 return teams.map((team) => (
                   <tr
@@ -91,7 +115,20 @@ export default async function OrganisationsPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-4 text-gray-600 truncate">{org.industry}</td>
-                    <td className="px-4 py-4 text-gray-700 font-medium">{team.name}</td>
+                    <td className="px-4 py-4 text-gray-700 font-medium truncate">{team.name}</td>
+                    <td className="px-4 py-4">
+                      {team.engagementStatus ? (
+                        team.engagementId ? (
+                          <Link href={`/admin/engagements/${team.engagementId}`}>
+                            <Badge variant={team.engagementStatus} />
+                          </Link>
+                        ) : (
+                          <Badge variant={team.engagementStatus} />
+                        )
+                      ) : (
+                        <span className="text-gray-300 text-xs italic">No engagement</span>
+                      )}
+                    </td>
                     <td className="px-4 py-4 text-gray-500 text-xs">
                       {org.createdAt?.toDate?.().toLocaleDateString('en-GB') ?? '—'}
                     </td>

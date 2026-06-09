@@ -6,7 +6,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getOrgDashboardData } from '@/lib/engagement-dashboard';
 import TeamDashboardView from '@/components/dashboard/TeamDashboardView';
-import EngagementPicker from '@/components/admin/EngagementPicker';
 
 export default async function OrgDashboardPage({
   params,
@@ -21,9 +20,12 @@ export default async function OrgDashboardPage({
 
   const { org, teams, dashboard, engagements } = data;
   const teamName = teams[0]?.name;
+  const selectedId = engagementId ?? engagements[0]?.id;
 
-  // Build base URL for engagement switching (preserving teamId)
   const baseUrl = `/admin/organisations/${params.id}/dashboard${teamId ? `?teamId=${teamId}` : ''}`;
+  const engagementQuery = selectedId
+    ? `${teamId ? '&' : '?'}engagementId=${selectedId}`
+    : '';
 
   return (
     <div className="space-y-6">
@@ -68,27 +70,20 @@ export default async function OrgDashboardPage({
         </div>
       ) : (
         <>
-          {/* Engagement selector */}
-          {engagements.length > 0 && (
-            <EngagementPicker
-              engagements={engagements}
-              selectedId={engagementId ?? engagements[0]?.id}
-              baseUrl={baseUrl}
-              teamId={teamId}
-            />
-          )}
-
           {dashboard ? (
             <TeamDashboardView
               data={dashboard}
               showAnalysisBanner
-              analysisHref={`/admin/organisations/${params.id}/dashboard/analysis${teamId ? `?teamId=${teamId}` : ''}${engagementId ? `${teamId ? '&' : '?'}engagementId=${engagementId}` : ''}`}
-              deltaHref={`/admin/organisations/${params.id}/dashboard/delta${teamId ? `?teamId=${teamId}` : ''}${engagementId ? `${teamId ? '&' : '?'}engagementId=${engagementId}` : ''}`}
+              surveys={engagements.map((e) => ({ id: e.id, title: e.title }))}
+              selectedSurveyId={selectedId}
+              surveyPickerBaseUrl={baseUrl}
+              analysisHref={`/admin/organisations/${params.id}/dashboard/analysis${teamId ? `?teamId=${teamId}` : ''}${engagementQuery}`}
+              deltaHref={`/admin/organisations/${params.id}/dashboard/delta${teamId ? `?teamId=${teamId}` : ''}${engagementQuery}`}
             />
           ) : (
             <div className="rounded-xl border border-gray-200 bg-white px-8 py-16 text-center">
               <h3 className="text-base font-bold text-orbit-dark mb-1">No data for this survey</h3>
-              <p className="text-sm text-gray-500">Select a different survey from the dropdown above.</p>
+              <p className="text-sm text-gray-500">Select a different survey from the dropdown in the header.</p>
             </div>
           )}
         </>

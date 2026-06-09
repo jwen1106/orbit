@@ -13,7 +13,7 @@ export async function sendManagerDashboardInvite(
   name: string,
 ): Promise<void> {
   const resend = getResend();
-  const dashboardUrl = `${BASE_URL()}/login`;
+  const dashboardUrl = `${BASE_URL()}/`;
   await resend.emails.send({
     from: FROM(),
     to: email,
@@ -80,7 +80,7 @@ export async function sendPasswordEmail(
   temporaryPassword: string,
 ): Promise<void> {
   const resend = getResend();
-  const loginUrl = `${BASE_URL()}/login`;
+  const loginUrl = `${BASE_URL()}/`;
   await resend.emails.send({
     from: FROM(),
     to: email,

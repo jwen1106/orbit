@@ -9,7 +9,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await verifySession();
-  if (!session || session.role !== 'team_manager') redirect('/login');
+  if (!session || session.role !== 'team_manager') redirect('/');
 
   const userDoc = await adminDb.collection('users').doc(session.uid).get();
   const displayName = userDoc.data()?.displayName ?? session.email;

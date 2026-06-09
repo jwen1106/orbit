@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
+import { MIN_MANAGER_PASSWORD_LENGTH } from '@/lib/manager-auth';
 
 const functionOptions = [
   { value: 'back', label: 'Back office' },
@@ -23,12 +24,20 @@ export default function NewTeamPage() {
   const [size, setSize] = useState('');
   const [managerName, setManagerName] = useState('');
   const [managerEmail, setManagerEmail] = useState('');
+  const [managerPassword, setManagerPassword] = useState('');
+  const [sendInviteEmail, setSendInviteEmail] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+
+    if (managerPassword.length < MIN_MANAGER_PASSWORD_LENGTH) {
+      setError(`Manager password must be at least ${MIN_MANAGER_PASSWORD_LENGTH} characters.`);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch('/api/admin/teams', {
@@ -41,6 +50,8 @@ export default function NewTeamPage() {
           size: parseInt(size),
           managerName,
           managerEmail,
+          managerPassword,
+          sendInviteEmail,
         }),
       });
       if (!res.ok) {
@@ -111,8 +122,31 @@ export default function NewTeamPage() {
             onChange={(e) => setManagerEmail(e.target.value)}
             placeholder="jane@organisation.com"
             required
-            hint="An invitation email will be sent to this address."
+            hint="Used to sign in to the results dashboard."
           />
+          <Input
+            label="Manager's password"
+            type="password"
+            value={managerPassword}
+            onChange={(e) => setManagerPassword(e.target.value)}
+            placeholder="Set a login password"
+            required
+            minLength={MIN_MANAGER_PASSWORD_LENGTH}
+            autoComplete="new-password"
+            hint={`Minimum ${MIN_MANAGER_PASSWORD_LENGTH} characters. Share this with the manager securely.`}
+          />
+
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={sendInviteEmail}
+              onChange={(e) => setSendInviteEmail(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-orbit-forest focus:ring-orbit-green cursor-pointer"
+            />
+            <span className="text-sm text-gray-600 leading-snug">
+              Send dashboard access invite email (password is not included in the email)
+            </span>
+          </label>
 
           {error && (
             <div className="rounded bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -122,7 +156,7 @@ export default function NewTeamPage() {
 
           <div className="flex gap-3 pt-2">
             <Button type="submit" loading={loading}>
-              Create team & invite manager
+              Create team
             </Button>
             <Link href={`/admin/organisations/${orgId}`}>
               <Button variant="ghost" type="button">

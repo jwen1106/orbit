@@ -36,7 +36,7 @@ async function getExportData(uid: string) {
 
 export default async function ExportReportPage() {
   const session = await verifySession();
-  if (!session) redirect('/login');
+  if (!session) redirect('/');
 
   const data = await getExportData(session.uid);
 

@@ -31,20 +31,124 @@ export type SerializedActionItem = {
 const COMPETENCIES: Competency[] = ['people_relationships', 'growth_impact', 'purpose_alignment'];
 
 const COMPETENCY_COLORS: Record<Competency, string> = {
-  people_relationships: 'bg-blue-100 text-blue-800',
-  growth_impact: 'bg-emerald-100 text-emerald-800',
-  purpose_alignment: 'bg-purple-100 text-purple-800',
+  people_relationships: 'bg-orbit-forest/10 text-orbit-forest',
+  growth_impact: 'bg-orbit-green/10 text-orbit-green',
+  purpose_alignment: 'bg-orbit-amber/10 text-amber-800',
 };
 
 const TIMELINE_COLORS: Record<string, string> = {
-  short_term: 'bg-amber-100 text-amber-800',
-  long_term: 'bg-slate-100 text-slate-700',
+  short_term: 'bg-orbit-amber/15 text-amber-800',
+  long_term: 'bg-orbit-forest/10 text-orbit-forest',
 };
 
+function StatusIcon({ type, compact }: { type: 'not_started' | 'in_progress' | 'complete'; compact?: boolean }) {
+  const box = compact ? 'w-9 h-9' : 'w-12 h-12';
+  const icon = compact ? 'w-4 h-4' : 'w-6 h-6';
+  if (type === 'complete') {
+    return (
+      <div className={`${box} rounded-full bg-orbit-forest flex items-center justify-center shadow-sm shadow-orbit-forest/20 flex-shrink-0`}>
+        <svg className={`${icon} text-white`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+    );
+  }
+  if (type === 'in_progress') {
+    return (
+      <div className={`${box} rounded-full bg-orbit-amber flex items-center justify-center shadow-sm shadow-orbit-amber/30 flex-shrink-0`}>
+        <svg className={`${icon} text-white`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+    );
+  }
+  return (
+    <div className={`${box} rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0`}>
+      <svg className={`${icon} text-gray-500`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <circle cx="12" cy="12" r="9" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 3" />
+      </svg>
+    </div>
+  );
+}
+
+function StatusStatCard({
+  type,
+  label,
+  count,
+  total,
+  accentBar,
+}: {
+  type: 'not_started' | 'in_progress' | 'complete';
+  label: string;
+  count: number;
+  total: number;
+  accentBar: string;
+}) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+  return (
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-3 hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-3">
+        <StatusIcon type={type} compact />
+        <div className="flex-1 min-w-0 text-left">
+          <p className="text-2xl font-bold text-orbit-dark tabular-nums leading-none">{count}</p>
+          <p className="text-xs font-semibold text-gray-600 mt-0.5">{label}</p>
+        </div>
+        <p className="text-xs text-gray-400 tabular-nums flex-shrink-0">{pct}%</p>
+      </div>
+      <div className="w-full mt-2.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-500 ${accentBar}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function completionBadge(pct: number) {
-  if (pct >= 100) return { label: 'Complete', cls: 'bg-green-100 text-green-800' };
-  if (pct > 0) return { label: `${pct}% Complete`, cls: 'bg-amber-100 text-amber-800' };
-  return { label: 'Not Started', cls: 'bg-gray-100 text-gray-600' };
+  if (pct >= 100) {
+    return {
+      label: 'Complete',
+      cls: 'bg-orbit-forest/10 text-orbit-forest border border-orbit-forest/20',
+      icon: 'complete' as const,
+    };
+  }
+  if (pct > 0) {
+    return {
+      label: `${pct}%`,
+      cls: 'bg-orbit-amber/15 text-amber-800 border border-orbit-amber/25',
+      icon: 'in_progress' as const,
+    };
+  }
+  return {
+    label: 'Not started',
+    cls: 'bg-gray-100 text-gray-600 border border-gray-200',
+    icon: 'not_started' as const,
+  };
+}
+
+function CompletionStatusPill({ pct }: { pct: number }) {
+  const { label, cls, icon } = completionBadge(pct);
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${cls}`}>
+      {icon === 'complete' && (
+        <span className="w-4 h-4 rounded-full bg-orbit-forest flex items-center justify-center flex-shrink-0">
+          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
+      )}
+      {icon === 'in_progress' && (
+        <span className="w-4 h-4 rounded-full bg-orbit-amber flex items-center justify-center flex-shrink-0">
+          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4" />
+          </svg>
+        </span>
+      )}
+      {icon === 'not_started' && (
+        <span className="w-4 h-4 rounded-full bg-gray-300 flex-shrink-0" />
+      )}
+      {pct >= 100 ? label : pct > 0 ? `${label} complete` : label}
+    </span>
+  );
 }
 
 function Spinner() {
@@ -82,7 +186,7 @@ function ActionRow({
       patch.status = pct >= 100 ? 'complete' : pct > 0 ? 'in_progress' : 'not_started';
     }
     try {
-      await fetch(`/api/admin/action-items/${action.id}`, {
+      await fetch(`/api/action-items/${action.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
@@ -98,17 +202,17 @@ function ActionRow({
     if (!confirm(`Delete "${action.title}"?`)) return;
     setDeleting(true);
     try {
-      await fetch(`/api/admin/action-items/${action.id}`, { method: 'DELETE' });
+      await fetch(`/api/action-items/${action.id}`, { method: 'DELETE' });
       onDelete(action.id);
     } finally {
       setDeleting(false);
     }
   }
 
-  const { label: pctLabel, cls: pctCls } = completionBadge(completionPct);
+  const { cls: pctCls } = completionBadge(completionPct);
 
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors group">
+    <tr className="border-b border-gray-100 hover:bg-orbit-forest/[0.02] transition-colors group">
       {/* Action title */}
       <td className="px-4 py-3">
         <p className="font-medium text-orbit-dark text-sm leading-snug">{action.title}</p>
@@ -178,10 +282,14 @@ function ActionRow({
         ) : (
           <button
             onClick={() => setEditingField('completionPct')}
-            className={`text-xs font-semibold px-2 py-1 rounded ${pctCls} hover:opacity-80 transition-opacity`}
+            className="hover:opacity-90 transition-opacity"
             title="Click to edit"
           >
-            {saving && editingField === 'completionPct' ? <Spinner /> : pctLabel}
+            {saving && editingField === 'completionPct' ? (
+              <span className={`text-xs font-semibold px-2 py-1 rounded ${pctCls}`}><Spinner /></span>
+            ) : (
+              <CompletionStatusPill pct={completionPct} />
+            )}
           </button>
         )}
       </td>
@@ -300,7 +408,10 @@ export default function ActionPlanView({
   initialActions: SerializedActionItem[];
 }) {
   const [actions, setActions] = useState<SerializedActionItem[]>(initialActions);
-  const [form, setForm] = useState<FormState>(defaultForm());
+  const [form, setForm] = useState<FormState>(() => ({
+    ...defaultForm(),
+    teamId: teams.length === 1 ? teams[0].id : '',
+  }));
   const [creating, setCreating] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -314,7 +425,7 @@ export default function ActionPlanView({
     setFormError(null);
     setCreating(true);
     try {
-      const res = await fetch('/api/admin/action-items', {
+      const res = await fetch('/api/action-items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -347,7 +458,7 @@ export default function ActionPlanView({
         priority: actions.length + 1,
       };
       setActions((prev) => [...prev, newAction]);
-      setForm(defaultForm());
+      setForm({ ...defaultForm(), teamId: teams.length === 1 ? teams[0].id : '' });
     } catch {
       setFormError('Failed to create action. Please try again.');
     } finally {
@@ -362,7 +473,7 @@ export default function ActionPlanView({
     try {
       const created: SerializedActionItem[] = [];
       for (const ex of EXAMPLE_ACTIONS) {
-        const res = await fetch('/api/admin/action-items', {
+        const res = await fetch('/api/action-items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...ex, teamId, organisationId: orgId }),
@@ -404,29 +515,22 @@ export default function ActionPlanView({
   const notStarted = actions.filter((a) => a.completionPct === 0).length;
   const inProgress = actions.filter((a) => a.completionPct > 0 && a.completionPct < 100).length;
   const complete = actions.filter((a) => a.completionPct >= 100).length;
+  const total = actions.length;
 
   return (
     <div className="space-y-6">
       {/* Summary stats */}
-      {actions.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: 'Not Started', count: notStarted, color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-200' },
-            { label: 'In Progress', count: inProgress, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
-            { label: 'Complete', count: complete, color: 'text-orbit-forest', bg: 'bg-green-50', border: 'border-green-200' },
-          ].map((s) => (
-            <div key={s.label} className={`rounded-xl border ${s.border} ${s.bg} px-5 py-4`}>
-              <p className="text-xs text-gray-500">{s.label}</p>
-              <p className={`text-3xl font-bold mt-1 ${s.color}`}>{s.count}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatusStatCard type="not_started" label="Not Started" count={notStarted} total={total} accentBar="bg-gray-300" />
+        <StatusStatCard type="in_progress" label="In Progress" count={inProgress} total={total} accentBar="bg-orbit-amber" />
+        <StatusStatCard type="complete" label="Complete" count={complete} total={total} accentBar="bg-orbit-forest" />
+      </div>
 
       {/* Create New Action form */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-100">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 bg-orbit-forest/[0.04]">
           <h2 className="text-base font-bold text-orbit-dark">Create New Action</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Add a measurable step tied to your maturity assessment</p>
         </div>
         <form onSubmit={handleCreate} className="px-6 py-5 space-y-4">
           {formError && (
@@ -499,16 +603,22 @@ export default function ActionPlanView({
               <label className="block text-xs font-semibold text-gray-600 mb-1">
                 Team <span className="text-red-400">*</span>
               </label>
-              <select
-                value={form.teamId}
-                onChange={(e) => setForm((f) => ({ ...f, teamId: e.target.value }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-forest"
-              >
-                <option value="">Select team</option>
-                {teams.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
+              {teams.length === 1 ? (
+                <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-orbit-dark bg-gray-50">
+                  {teams[0].name}
+                </div>
+              ) : (
+                <select
+                  value={form.teamId}
+                  onChange={(e) => setForm((f) => ({ ...f, teamId: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-orbit-dark focus:outline-none focus:ring-2 focus:ring-orbit-forest"
+                >
+                  <option value="">Select team</option>
+                  {teams.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Owner</label>
@@ -526,7 +636,7 @@ export default function ActionPlanView({
             <button
               type="submit"
               disabled={creating}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-orbit-forest text-white hover:bg-orbit-green disabled:opacity-60 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl bg-orbit-amber text-orbit-dark hover:bg-orbit-amber/90 disabled:opacity-60 transition-colors shadow-sm"
             >
               {creating ? <><Spinner /> Creating…</> : (
                 <>
@@ -542,8 +652,8 @@ export default function ActionPlanView({
       </div>
 
       {/* Active Actions table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 bg-orbit-forest/[0.04] flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-base font-bold text-orbit-dark">
             Active Actions
             <span className="ml-2 text-sm font-normal text-gray-400">({filtered.length})</span>
@@ -589,20 +699,24 @@ export default function ActionPlanView({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <svg viewBox="0 0 24 24" className="w-10 h-10 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-              <rect x="9" y="3" width="6" height="4" rx="1" />
-              <path d="M9 12h6M9 16h4" />
-            </svg>
-            <p className="font-medium">No actions yet</p>
-            <p className="text-sm mt-1">Use the form above to create the first action, or load examples to get started.</p>
+          <div className="text-center py-16 px-6">
+            <div className="w-14 h-14 rounded-full bg-orbit-forest/10 flex items-center justify-center mx-auto mb-4">
+              <svg viewBox="0 0 24 24" className="w-7 h-7 text-orbit-forest opacity-60" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+                <path d="M9 12h6M9 16h4" />
+              </svg>
+            </div>
+            <p className="font-semibold text-orbit-dark">No actions yet</p>
+            <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
+              Use the form above to create the first action, or load examples to get started.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
+                <tr className="bg-orbit-forest/[0.08] border-b border-gray-200">
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 text-xs">Action</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 text-xs">Competency</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 text-xs">Owner</th>

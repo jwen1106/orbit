@@ -132,7 +132,7 @@ export default function BenchmarksManager({ initialBenchmarks }: { initialBenchm
         function: editData.function,
         sizeRange: editData.sizeRange.trim(),
         competencyScores: parseScores(editData.scores),
-        source: 'oaklin_authored',
+        source: 'oaklin_authored' as const,
       };
       const res = await fetch(`/api/admin/benchmarks/${bm.id}`, {
         method: 'PATCH',

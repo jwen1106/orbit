@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
-import type { Question, Competency } from '@/types';
+import type { Question } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
 
 const competencyOptions = [
@@ -21,12 +20,6 @@ const roleOptions = [
   { value: 'manager', label: 'Manager only' },
   { value: 'member', label: 'Member only' },
 ];
-
-const competencyBadge: Record<Competency, 'people' | 'growth' | 'purpose'> = {
-  people_relationships: 'people',
-  growth_impact: 'growth',
-  purpose_alignment: 'purpose',
-};
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -138,11 +131,8 @@ export default function QuestionsPage() {
                       <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{q.subtext}</p>
                     )}
                   </td>
-                  <td className="px-5 py-3 whitespace-nowrap">
-                    <Badge
-                      variant={competencyBadge[q.competency]}
-                      label={COMPETENCY_LABELS[q.competency]}
-                    />
+                  <td className="px-5 py-3 text-gray-600 text-xs whitespace-nowrap">
+                    {COMPETENCY_LABELS[q.competency]}
                   </td>
                   <td className="px-5 py-3 text-gray-600 capitalize text-xs whitespace-nowrap">
                     {q.role}

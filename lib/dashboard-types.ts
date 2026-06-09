@@ -75,6 +75,7 @@ export interface DetailedCompetencyBreakdown {
 
 export interface DetailedAnalysisData {
   engagementId: string;
+  engagementTitle: string;
   teamName: string;
   overallScore: number | null;
   maturityLabel: string;

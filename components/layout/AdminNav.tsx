@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import OrbitLogo from './OrbitLogo';
+import { clearPlatformSession } from '@/lib/auth-client';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', exact: true },
@@ -17,8 +18,9 @@ export default function AdminNav({ userEmail }: { userEmail: string }) {
   const router = useRouter();
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await clearPlatformSession();
     router.push('/');
+    router.refresh();
   }
 
   function isActive(href: string, exact?: boolean) {

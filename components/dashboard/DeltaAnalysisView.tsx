@@ -56,28 +56,28 @@ function QuestionCard({ question }: { question: QuestionBreakdown }) {
       </div>
 
       {/* Scores */}
-      <div className="px-8 py-7 grid grid-cols-3 items-center gap-6 border-b border-gray-100">
-        <div className="text-center">
-          <p className="text-xs text-gray-400 mb-3">Team Manager Assessment</p>
+      <div className="px-8 py-7 grid grid-cols-3 items-center gap-8 border-b border-gray-100">
+        <div className="text-center px-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Team Member Average</p>
+          <p className={`text-5xl font-bold leading-none ${noMem ? 'text-gray-200' : 'text-gray-600'}`}>
+            {noMem ? '—' : (question.memberScore?.toFixed(1) ?? '—')}
+          </p>
+          {question.memberCriteriaLabel && (
+            <p className="text-xs text-gray-500 mt-3 leading-snug">{question.memberCriteriaLabel}</p>
+          )}
+        </div>
+        <div className="text-center px-4">
+          <span className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-semibold border ${gColour}`}>
+            {delta !== null && <>Δ Delta: {Math.abs(delta).toFixed(1)} &mdash; </>}{gLabel}
+          </span>
+        </div>
+        <div className="text-center px-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Team Manager Average</p>
           <p className={`text-5xl font-bold leading-none ${noMgr ? 'text-gray-200' : 'text-orbit-forest'}`}>
             {noMgr ? '—' : (question.managerScore?.toFixed(1) ?? '—')}
           </p>
           {question.managerCriteriaLabel && (
             <p className="text-xs text-gray-500 mt-3 leading-snug">{question.managerCriteriaLabel}</p>
-          )}
-        </div>
-        <div className="text-center">
-          <span className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-semibold border ${gColour}`}>
-            {delta !== null && <>Δ Delta: {Math.abs(delta).toFixed(1)} &mdash; </>}{gLabel}
-          </span>
-        </div>
-        <div className="text-center">
-          <p className="text-xs text-gray-400 mb-3">Team Member Assessment</p>
-          <p className={`text-5xl font-bold leading-none ${noMem ? 'text-gray-200' : 'text-gray-500'}`}>
-            {noMem ? '—' : (question.memberScore?.toFixed(1) ?? '—')}
-          </p>
-          {question.memberCriteriaLabel && (
-            <p className="text-xs text-gray-500 mt-3 leading-snug">{question.memberCriteriaLabel}</p>
           )}
         </div>
       </div>
@@ -180,23 +180,23 @@ function AggregatedCard({ questions, competencyLabel }: { questions: QuestionBre
       </div>
 
       {/* Scores */}
-      <div className="px-8 py-7 grid grid-cols-3 items-center gap-6 border-b border-gray-100">
-        <div className="text-center">
-          <p className="text-xs text-gray-400 mb-3">Team Manager Assessment</p>
-          <p className={`text-5xl font-bold leading-none ${mgrScore === null ? 'text-gray-200' : 'text-orbit-forest'}`}>
-            {mgrScore !== null ? mgrScore.toFixed(1) : '—'}
+      <div className="px-8 py-7 grid grid-cols-3 items-center gap-8 border-b border-gray-100">
+        <div className="text-center px-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Team Member Average</p>
+          <p className={`text-5xl font-bold leading-none ${memScore === null ? 'text-gray-200' : 'text-gray-600'}`}>
+            {memScore !== null ? memScore.toFixed(1) : '—'}
           </p>
           <p className="text-xs text-gray-400 mt-3">avg score</p>
         </div>
-        <div className="text-center">
+        <div className="text-center px-4">
           <span className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-semibold border ${gColour}`}>
             {delta !== null && <>Δ Delta: {Math.abs(delta).toFixed(1)} &mdash; </>}{gLabel}
           </span>
         </div>
-        <div className="text-center">
-          <p className="text-xs text-gray-400 mb-3">Team Member Assessment</p>
-          <p className={`text-5xl font-bold leading-none ${memScore === null ? 'text-gray-200' : 'text-gray-500'}`}>
-            {memScore !== null ? memScore.toFixed(1) : '—'}
+        <div className="text-center px-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Team Manager Average</p>
+          <p className={`text-5xl font-bold leading-none ${mgrScore === null ? 'text-gray-200' : 'text-orbit-forest'}`}>
+            {mgrScore !== null ? mgrScore.toFixed(1) : '—'}
           </p>
           <p className="text-xs text-gray-400 mt-3">avg score</p>
         </div>
@@ -244,29 +244,63 @@ function AggregatedCard({ questions, competencyLabel }: { questions: QuestionBre
 
       {/* Per-question score summary table */}
       {withData.length > 1 && (
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/60">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Question breakdown</p>
-          <div className="space-y-2">
-            {questions.map((q) => {
-              const qDelta = q.delta;
-              const { label: ql, colour: qc } =
-                qDelta !== null ? gapLabel(qDelta) : { label: '—', colour: 'bg-gray-100 text-gray-400 border-gray-200' };
-              return (
-                <div key={q.questionId} className="flex items-center gap-4 text-xs">
-                  <p className="flex-1 text-gray-600 truncate" title={q.questionSubtext ?? q.questionText}>
-                    {q.questionSubtext ?? q.questionText}
-                  </p>
-                  <span className="text-orbit-forest font-semibold w-8 text-right tabular-nums flex-shrink-0">
-                    {q.managerScore?.toFixed(1) ?? '—'}
-                  </span>
-                  <span className="text-gray-400 flex-shrink-0">vs</span>
-                  <span className="text-gray-500 font-semibold w-8 text-right tabular-nums flex-shrink-0">
-                    {q.memberScore?.toFixed(1) ?? '—'}
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-full border text-2xs font-medium flex-shrink-0 ${qc}`}>{ql}</span>
-                </div>
-              );
-            })}
+        <div className="px-6 py-5 border-t border-gray-100 bg-gray-50/40">
+          <p className="text-sm font-bold text-orbit-dark mb-4">Question breakdown</p>
+          <div className="rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm">
+            {/* Column headers */}
+            <div className="grid grid-cols-[minmax(0,1fr)_160px_160px] gap-x-8 px-6 py-3.5 bg-gray-50 border-b border-gray-200">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Question</p>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide text-center">
+                Team Member Average
+              </p>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide text-center">
+                Team Manager Average
+              </p>
+            </div>
+
+            {/* Rows */}
+            <div className="divide-y divide-gray-100">
+              {questions.map((q) => {
+                const qDelta = q.delta;
+                const { label: ql, colour: qc } =
+                  qDelta !== null ? gapLabel(qDelta) : { label: '—', colour: 'bg-gray-100 text-gray-400 border-gray-200' };
+                const questionLabel = q.questionSubtext ?? q.questionText;
+
+                return (
+                  <div
+                    key={q.questionId}
+                    className="grid grid-cols-[minmax(0,1fr)_160px_160px] gap-x-8 px-6 py-5 items-center hover:bg-gray-50/60 transition-colors"
+                  >
+                    <div className="min-w-0 pr-4">
+                      <p className="text-sm font-medium text-orbit-dark leading-snug">{questionLabel}</p>
+                      {qDelta !== null && (
+                        <span className={`inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full border text-2xs font-semibold ${qc}`}>
+                          Δ {Math.abs(qDelta).toFixed(1)} · {ql}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-center px-2">
+                      <p className={`text-2xl font-bold tabular-nums leading-none ${q.memberScore === null ? 'text-gray-200' : 'text-gray-600'}`}>
+                        {q.memberScore?.toFixed(1) ?? '—'}
+                      </p>
+                      {q.memberCriteriaLabel && (
+                        <p className="text-2xs text-gray-400 mt-2 leading-snug line-clamp-2">{q.memberCriteriaLabel}</p>
+                      )}
+                    </div>
+
+                    <div className="text-center px-2">
+                      <p className={`text-2xl font-bold tabular-nums leading-none ${q.managerScore === null ? 'text-gray-200' : 'text-orbit-forest'}`}>
+                        {q.managerScore?.toFixed(1) ?? '—'}
+                      </p>
+                      {q.managerCriteriaLabel && (
+                        <p className="text-2xs text-gray-400 mt-2 leading-snug line-clamp-2">{q.managerCriteriaLabel}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

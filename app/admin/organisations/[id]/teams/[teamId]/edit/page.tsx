@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
+import { MIN_MANAGER_PASSWORD_LENGTH } from '@/lib/manager-auth';
 
 const functionOptions = [
   { value: 'back', label: 'Back office' },
@@ -30,6 +31,7 @@ export default function EditTeamPage() {
   const [manager, setManager] = useState<ManagerInfo | null>(null);
   const [managerName, setManagerName] = useState('');
   const [managerEmail, setManagerEmail] = useState('');
+  const [managerPassword, setManagerPassword] = useState('');
 
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,6 +62,10 @@ export default function EditTeamPage() {
     setError('');
     setSaving(true);
     try {
+      if (managerPassword && managerPassword.length < MIN_MANAGER_PASSWORD_LENGTH) {
+        throw new Error(`Password must be at least ${MIN_MANAGER_PASSWORD_LENGTH} characters.`);
+      }
+
       const res = await fetch(`/api/admin/teams/${teamId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -69,6 +75,7 @@ export default function EditTeamPage() {
           size: size || undefined,
           managerName: managerName || undefined,
           managerEmail: managerEmail || undefined,
+          managerPassword: managerPassword || undefined,
         }),
       });
       if (!res.ok) {
@@ -172,6 +179,16 @@ export default function EditTeamPage() {
               onChange={(e) => setManagerEmail(e.target.value)}
               placeholder="jane@organisation.com"
               hint="Updating this changes the login email used by the manager."
+            />
+            <Input
+              label="New password"
+              type="password"
+              value={managerPassword}
+              onChange={(e) => setManagerPassword(e.target.value)}
+              placeholder="Leave blank to keep current password"
+              minLength={MIN_MANAGER_PASSWORD_LENGTH}
+              autoComplete="new-password"
+              hint={`Optional. Minimum ${MIN_MANAGER_PASSWORD_LENGTH} characters if changing.`}
             />
           </div>
 

@@ -125,7 +125,7 @@ async function getTimelineData(uid: string) {
 
 export default async function TimelinePage() {
   const session = await verifySession();
-  if (!session) redirect('/login');
+  if (!session) redirect('/');
 
   const data = await getTimelineData(session.uid);
 

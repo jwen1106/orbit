@@ -11,14 +11,15 @@ interface Props {
 
 function formatDateTime(ts: Respondent['completedAt']): string {
   if (!ts) return '—';
-  // Handle both Firestore Timestamp objects and their JSON-serialised form
+  // Handle Firestore Timestamp objects and JSON-serialised forms from the server
+  const raw = ts as unknown;
   let d: Date | null = null;
-  if (typeof (ts as { toDate?: unknown }).toDate === 'function') {
-    d = (ts as { toDate: () => Date }).toDate();
-  } else if (typeof (ts as { seconds?: number }).seconds === 'number') {
-    d = new Date((ts as { seconds: number }).seconds * 1000);
-  } else if (typeof (ts as { _seconds?: number })._seconds === 'number') {
-    d = new Date((ts as { _seconds: number })._seconds * 1000);
+  if (typeof (raw as { toDate?: unknown }).toDate === 'function') {
+    d = (raw as { toDate: () => Date }).toDate();
+  } else if (typeof (raw as { seconds?: number }).seconds === 'number') {
+    d = new Date((raw as { seconds: number }).seconds * 1000);
+  } else if (typeof (raw as { _seconds?: number })._seconds === 'number') {
+    d = new Date((raw as { _seconds: number })._seconds * 1000);
   }
   if (!d) return '—';
   return d.toLocaleString('en-GB', {
