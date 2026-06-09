@@ -1,6 +1,7 @@
 import { adminDb } from '@/lib/firebase-admin';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
+import { requireAdmin } from '@/lib/auth';
 import type { Organisation } from '@/types';
 import ActionPlanView from '@/components/admin/ActionPlanView';
 import type { SerializedActionItem, SerializedTeam } from '@/components/admin/ActionPlanView';
@@ -69,6 +70,12 @@ export default async function OrgActionPlanPage({
 }: {
   params: { id: string };
 }) {
+  try {
+    await requireAdmin();
+  } catch {
+    redirect('/login');
+  }
+
   const data = await getData(params.id);
   if (!data) notFound();
   const { org, teams, actions } = data;
