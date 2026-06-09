@@ -10,7 +10,6 @@ const navItems = [
   { href: '/admin/engagements', label: 'Engagements' },
   { href: '/admin/questions', label: 'Questions' },
   { href: '/admin/benchmarks', label: 'Benchmarks' },
-  { href: '/admin/portfolio', label: 'Portfolio' },
 ];
 
 export default function AdminNav({ userEmail }: { userEmail: string }) {
