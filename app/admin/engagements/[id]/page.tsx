@@ -75,7 +75,7 @@ export default function EngagementDetailPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  async function updateStatus(action: 'activate' | 'close' | 'analyse') {
+  async function updateStatus(action: 'activate' | 'close' | 'analyse' | 'reopen') {
     setActionLoading(action);
     setError('');
     try {
@@ -313,6 +313,9 @@ export default function EngagementDetailPage() {
               </Link>
               <Button variant="amber" onClick={() => updateStatus('analyse')} loading={actionLoading === 'analyse'}>
                 {actionLoading === 'analyse' ? 'Analysing…' : 'Run AI analysis'}
+              </Button>
+              <Button variant="ghost" onClick={() => updateStatus('reopen')} loading={actionLoading === 'reopen'}>
+                Reopen survey
               </Button>
             </>
           )}
