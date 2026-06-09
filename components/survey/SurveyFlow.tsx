@@ -36,6 +36,8 @@ export default function SurveyFlow({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [name, setName] = useState(preName);
+  const [email, setEmail] = useState(preEmail);
+  const [agreed, setAgreed] = useState(false);
   // Track the respondent id; for shared-link users the server creates it on the first
   // answer and returns it, so we must capture and reuse it for subsequent saves.
   const [currentRespondentId, setCurrentRespondentId] = useState<string | null>(respondentId);
@@ -78,7 +80,7 @@ export default function SurveyFlow({
           accessMethod,
           role,
           name: isFirst && name.trim() ? name.trim() : undefined,
-          email: isFirst && preEmail.trim() ? preEmail.trim() : undefined,
+          email: isFirst && email.trim() ? email.trim() : undefined,
           questionId: current.id,
           score: answers[current.id],
           isFirst,
@@ -118,32 +120,124 @@ export default function SurveyFlow({
     setCurrentIndex((i) => Math.max(0, i - 1));
   }
 
-  // Name capture screen for shared-link members
+  // Details capture screen — shown before the survey begins
   if (!nameSubmitted) {
+    const surveyUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/survey/${role === 'manager' ? 'manager' : 'member'}?token=${token}`
+      : `…/survey/${role === 'manager' ? 'manager' : 'member'}?token=${token}`;
+
+    function handleBegin(e: React.FormEvent) {
+      e.preventDefault();
+      if (!name.trim()) return;
+      if (!agreed) return;
+      setNameSubmitted(true);
+    }
+
     return (
       <div className="min-h-screen bg-orbit-offwhite flex flex-col">
         <SurveyHeader />
-        <div className="flex-1 flex items-center justify-center px-4">
+        <div className="flex-1 flex items-center justify-center px-4 py-10">
           <div className="w-full max-w-lg">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
-              <h1 className="text-xl font-bold text-orbit-dark mb-2">Welcome to Orbit</h1>
-              <p className="text-sm text-gray-500 mb-6">
-                Before you begin, please enter your name. Your responses will remain anonymous in the aggregated results.
-              </p>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your full name"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-orbit-green"
-              />
-              <Button
-                className="w-full"
-                onClick={() => { if (name.trim()) setNameSubmitted(true); }}
-                disabled={!name.trim()}
-              >
-                Begin survey →
-              </Button>
+            {/* Card matching landing page Complete Survey card */}
+            <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+              {/* Gradient header */}
+              <div className="bg-gradient-to-r from-orbit-forest to-orbit-green px-6 py-5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">
+                    {role === 'manager' ? 'Manager Assessment' : 'Complete Survey'}
+                  </h2>
+                  <p className="text-xs text-white/70 mt-0.5">Operational Maturity Diagnostic</p>
+                </div>
+              </div>
+
+              {/* Form body */}
+              <div className="bg-white px-6 py-6">
+                <p className="text-sm text-gray-500 mb-5">
+                  {role === 'manager'
+                    ? 'Share your perspective on your team\'s operational maturity. Your responses inform the leadership view of the diagnostic.'
+                    : 'Share your honest assessment of your team\'s operational maturity. Your responses will be anonymised and aggregated with other assessments.'}
+                </p>
+
+                <form onSubmit={handleBegin} className="flex flex-col gap-4">
+                  <p className="text-sm font-semibold text-orbit-dark -mb-1">Your Details</p>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Full Name <span className="text-red-400">*</span></label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Alex Johnson"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-orbit-dark placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orbit-green"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="e.g. alex.johnson@example.com"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-orbit-dark placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orbit-green"
+                    />
+                  </div>
+
+                  {/* Pre-populated survey link (read-only) */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Survey Link</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={surveyUrl}
+                      className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-500 font-mono cursor-default select-all"
+                    />
+                  </div>
+
+                  {/* Privacy notice */}
+                  <div className="rounded-md bg-amber-50 border border-amber-100 px-4 py-3 flex gap-2.5">
+                    <svg className="w-4 h-4 text-orbit-amber flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      <span className="font-semibold text-orbit-dark">Data Privacy &amp; Anonymity:</span>{' '}
+                      Your personal details will be stored securely and separately from your assessment
+                      responses. Your responses will be anonymised in all reports and analysis. Only
+                      aggregate data will be shared with leadership.
+                    </p>
+                  </div>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={agreed}
+                      onChange={(e) => setAgreed(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-orbit-forest focus:ring-orbit-green cursor-pointer"
+                    />
+                    <span className="text-xs text-gray-600 leading-relaxed">
+                      I confirm that I understand my responses will be anonymised and agree to participate
+                      in this assessment.
+                    </span>
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={!name.trim() || !agreed}
+                    className="w-full bg-orbit-forest text-white font-semibold rounded-md py-2.5 text-sm hover:bg-orbit-green transition-colors mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Begin Survey →
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
