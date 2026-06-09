@@ -6,23 +6,28 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getOrgDashboardData } from '@/lib/engagement-dashboard';
 import TeamDashboardView from '@/components/dashboard/TeamDashboardView';
+import EngagementPicker from '@/components/admin/EngagementPicker';
 
 export default async function OrgDashboardPage({
   params,
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { teamId?: string };
+  searchParams: { teamId?: string; engagementId?: string };
 }) {
-  const teamId = searchParams.teamId;
-  const data = await getOrgDashboardData(params.id, teamId);
+  const { teamId, engagementId } = searchParams;
+  const data = await getOrgDashboardData(params.id, teamId, engagementId);
   if (!data) notFound();
 
-  const { org, teams, dashboard } = data;
+  const { org, teams, dashboard, engagements } = data;
   const teamName = teams[0]?.name;
+
+  // Build base URL for engagement switching (preserving teamId)
+  const baseUrl = `/admin/organisations/${params.id}/dashboard${teamId ? `?teamId=${teamId}` : ''}`;
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
         <Link href="/admin/organisations" className="text-orbit-green hover:underline">
           Organisations
@@ -47,30 +52,46 @@ export default async function OrgDashboardPage({
           <p className="text-sm text-gray-500 max-w-sm mx-auto">
             Add a team to this organisation before viewing the dashboard.
           </p>
-          <Link
-            href={`/admin/organisations/${org.id}`}
-            className="inline-block mt-4 text-sm text-orbit-green hover:underline font-semibold"
-          >
+          <Link href={`/admin/organisations/${org.id}`} className="inline-block mt-4 text-sm text-orbit-green hover:underline font-semibold">
             ← Back to organisation
           </Link>
         </div>
-      ) : dashboard ? (
-        <TeamDashboardView
-          data={dashboard}
-          showAnalysisBanner
-          analysisHref={`/admin/organisations/${org.id}/dashboard/analysis${teamId ? `?teamId=${teamId}` : ''}`}
-          deltaHref={`/admin/organisations/${org.id}/dashboard/delta${teamId ? `?teamId=${teamId}` : ''}`}
-        />
-      ) : (
+      ) : engagements.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white px-8 py-16 text-center">
-          <h3 className="text-base font-bold text-orbit-dark mb-1">No survey data yet</h3>
+          <h3 className="text-base font-bold text-orbit-dark mb-1">No survey results yet</h3>
           <p className="text-sm text-gray-500 max-w-sm mx-auto">
-            This team&apos;s survey needs to be closed before the dashboard is available.
+            Results appear here once at least one team member has completed the survey.
           </p>
           <Link href="/admin/organisations" className="inline-block mt-4 text-sm text-orbit-green hover:underline font-semibold">
             ← Back to organisations
           </Link>
         </div>
+      ) : (
+        <>
+          {/* Engagement selector */}
+          {engagements.length > 0 && (
+            <EngagementPicker
+              engagements={engagements}
+              selectedId={engagementId ?? engagements[0]?.id}
+              baseUrl={baseUrl}
+              teamId={teamId}
+            />
+          )}
+
+          {dashboard ? (
+            <TeamDashboardView
+              data={dashboard}
+              showAnalysisBanner
+              analysisHref={`/admin/organisations/${params.id}/dashboard/analysis${teamId ? `?teamId=${teamId}` : ''}${engagementId ? `${teamId ? '&' : '?'}engagementId=${engagementId}` : ''}`}
+              deltaHref={`/admin/organisations/${params.id}/dashboard/delta${teamId ? `?teamId=${teamId}` : ''}${engagementId ? `${teamId ? '&' : '?'}engagementId=${engagementId}` : ''}`}
+            />
+          ) : (
+            <div className="rounded-xl border border-gray-200 bg-white px-8 py-16 text-center">
+              <h3 className="text-base font-bold text-orbit-dark mb-1">No data for this survey</h3>
+              <p className="text-sm text-gray-500">Select a different survey from the dropdown above.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

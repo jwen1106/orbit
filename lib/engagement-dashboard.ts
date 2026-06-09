@@ -420,7 +420,16 @@ export async function getManagerDashboardData(uid: string) {
   return { team, dashboard, latestEngagement: dashboardEng };
 }
 
-export async function getOrgDashboardData(orgId: string, teamId?: string) {
+export interface OrgEngagementOption {
+  id: string;
+  title: string;
+  status: string;
+  teamId: string;
+  teamName: string;
+  createdAt: number;
+}
+
+export async function getOrgDashboardData(orgId: string, teamId?: string, engagementId?: string) {
   const [orgDoc, teamsSnap] = await Promise.all([
     adminDb.collection('organisations').doc(orgId).get(),
     adminDb.collection('teams').where('organisationId', '==', orgId).get(),
@@ -431,11 +440,10 @@ export async function getOrgDashboardData(orgId: string, teamId?: string) {
   const org = { id: orgDoc.id, ...orgDoc.data() } as Organisation;
   let teams = teamsSnap.docs.map((d) => ({ id: d.id, ...d.data() } as Team));
 
-  // If a specific teamId was requested, filter to just that team
   if (teamId) teams = teams.filter((t) => t.id === teamId);
 
   if (teams.length === 0) {
-    return { org, teams, dashboard: null as EngagementDashboardData | null };
+    return { org, teams, dashboard: null as EngagementDashboardData | null, engagements: [] as OrgEngagementOption[] };
   }
 
   const engagementLists = await Promise.all(
@@ -444,37 +452,66 @@ export async function getOrgDashboardData(orgId: string, teamId?: string) {
     ),
   );
 
-  const dashboardEngagements = engagementLists
-    .flatMap((snap, index) =>
-      snap.docs.map((d) => ({
-        engagement: { id: d.id, ...d.data() } as Engagement,
-        team: teams[index],
-      })),
-    )
-    .filter(({ engagement }) => engagement.status === 'closed' || engagement.status === 'analysed')
-    .sort((a, b) => {
-      const aTime =
-        a.engagement.closedAt?.toMillis?.() ??
-        a.engagement.analysedAt?.toMillis?.() ??
-        a.engagement.createdAt?.toMillis?.() ??
-        0;
-      const bTime =
-        b.engagement.closedAt?.toMillis?.() ??
-        b.engagement.analysedAt?.toMillis?.() ??
-        b.engagement.createdAt?.toMillis?.() ??
-        0;
-      return bTime - aTime;
-    });
+  // Build flat list of all engagements with their team context
+  const allEngagements = engagementLists.flatMap((snap, index) =>
+    snap.docs.map((d) => ({
+      engagement: { id: d.id, ...d.data() } as Engagement,
+      team: teams[index],
+    })),
+  );
 
-  if (dashboardEngagements.length > 0) {
-    const dashboard = await getEngagementDashboardData(dashboardEngagements[0].engagement.id);
-    return { org, teams, dashboard };
+  // Check which active engagements have at least one completed response
+  const activeWithResponses = await Promise.all(
+    allEngagements
+      .filter(({ engagement }) => engagement.status === 'active')
+      .map(async ({ engagement, team }) => {
+        const respondents = await adminDb
+          .collection('engagements').doc(engagement.id)
+          .collection('respondents')
+          .where('status', '==', 'completed')
+          .limit(1)
+          .get();
+        return respondents.size > 0 ? { engagement, team } : null;
+      }),
+  );
+
+  // Eligible = closed, analysed, or active with at least one completed response
+  const eligible = [
+    ...allEngagements.filter(({ engagement }) =>
+      engagement.status === 'closed' || engagement.status === 'analysed',
+    ),
+    ...activeWithResponses.filter((x): x is { engagement: Engagement; team: Team } => x !== null),
+  ].sort((a, b) => {
+    const aTime = a.engagement.closedAt?.toMillis?.() ?? a.engagement.createdAt?.toMillis?.() ?? 0;
+    const bTime = b.engagement.closedAt?.toMillis?.() ?? b.engagement.createdAt?.toMillis?.() ?? 0;
+    return bTime - aTime;
+  });
+
+  // Build the options list for the dropdown (most recent first)
+  const engagements: OrgEngagementOption[] = eligible.map(({ engagement, team }) => ({
+    id: engagement.id,
+    title: engagement.title || `${team.name} survey`,
+    status: engagement.status,
+    teamId: team.id,
+    teamName: team.name,
+    createdAt: engagement.createdAt?.toMillis?.() ?? 0,
+  }));
+
+  // Pick which engagement to display
+  const selected = engagementId
+    ? eligible.find(({ engagement }) => engagement.id === engagementId) ?? eligible[0]
+    : eligible[0];
+
+  if (selected) {
+    const dashboard = await getEngagementDashboardData(selected.engagement.id);
+    return { org, teams, dashboard, engagements };
   }
 
   return {
     org,
     teams,
     dashboard: buildEmptyDashboard('preview', teams[0].name, org.name),
+    engagements,
   };
 }
 
