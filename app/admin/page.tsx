@@ -70,9 +70,10 @@ async function getDashboardData() {
     organisations: orgsSnap.size,
     teams: teamsSnap.size,
     total: engSnap.size,
-    active: rawEngagements.filter((e) => e.status === 'active').length,
-    analysed: rawEngagements.filter((e) => e.status === 'analysed').length,
     draft: rawEngagements.filter((e) => e.status === 'draft').length,
+    active: rawEngagements.filter((e) => e.status === 'active').length,
+    closed: rawEngagements.filter((e) => e.status === 'closed' || e.status === 'analysed').length,
+    analysed: rawEngagements.filter((e) => e.status === 'analysed').length,
   };
 
   return { orgs, teams, engagements, stats };
@@ -97,14 +98,13 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
           { label: 'Organisations', value: stats.organisations, color: 'text-orbit-forest' },
           { label: 'Teams', value: stats.teams, color: 'text-orbit-forest' },
-          { label: 'Total engagements', value: stats.total, color: 'text-orbit-dark' },
-          { label: 'Active surveys', value: stats.active, color: 'text-orbit-amber' },
-          { label: 'Analysed', value: stats.analysed, color: 'text-orbit-green' },
-          { label: 'Draft', value: stats.draft, color: 'text-gray-400' },
+          { label: 'Draft Surveys', value: stats.draft, color: 'text-gray-400' },
+          { label: 'Active Surveys', value: stats.active, color: 'text-orbit-amber' },
+          { label: 'Closed Surveys', value: stats.closed, color: 'text-orbit-green' },
         ].map((stat) => (
           <Card key={stat.label} padding="md">
             <p className="text-xs text-gray-500">{stat.label}</p>
