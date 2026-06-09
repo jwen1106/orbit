@@ -2,6 +2,32 @@ import type { Competency } from '@/types';
 
 export const DASHBOARD_NOT_AVAILABLE = 'Not available';
 
+// ── Per-question breakdown ──────────────────────────────────────────────────
+export interface QuestionBreakdown {
+  questionId: string;
+  questionText: string;
+  questionSubtext?: string;
+  competency: Competency;
+  order: number;
+  /** Criteria descriptions keyed by score level "1"–"5" */
+  criteria: Record<string, string>;
+  overallScore: number | null;
+  managerScore: number | null;
+  memberScore: number | null;
+  respondentCount: number;
+  managerCount: number;
+  memberCount: number;
+  /** manager − member (positive = manager rates higher) */
+  delta: number | null;
+  overallDistribution: ScoreDistributionItem[];
+  managerDistribution: ScoreDistributionItem[];
+  memberDistribution: ScoreDistributionItem[];
+  /** criteria label matching manager's rounded average score */
+  managerCriteriaLabel: string | null;
+  /** criteria label matching member's rounded average score */
+  memberCriteriaLabel: string | null;
+}
+
 export interface DashboardStrength {
   title: string;
   description: string;
@@ -58,6 +84,8 @@ export interface DetailedAnalysisData {
   quickWins: DashboardStrength[];
   oaklinSupport: DashboardStrength[];
   competencyBreakdown: DetailedCompetencyBreakdown[];
+  /** Per-question breakdowns, sorted by competency then question order */
+  questionBreakdowns: QuestionBreakdown[];
   radarAvailable: boolean;
   radarOverall: Record<Competency, number> | null;
   radarManager: Record<Competency, number> | null;

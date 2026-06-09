@@ -17,6 +17,7 @@ import {
   type ScoreDistributionItem,
   type DetailedCompetencyBreakdown,
   type DetailedAnalysisData,
+  type QuestionBreakdown,
 } from '@/lib/dashboard-types';
 
 export {
@@ -27,6 +28,7 @@ export {
   type ScoreDistributionItem,
   type DetailedCompetencyBreakdown,
   type DetailedAnalysisData,
+  type QuestionBreakdown,
 } from '@/lib/dashboard-types';
 
 const COMPETENCIES: Competency[] = [
@@ -281,6 +283,8 @@ async function computeScoresFromResponses(engagementId: string, engagement: Enga
     managerScores,
     memberScores,
     memberResponses,
+    managerResponses,
+    allResponses,
     questions,
     memberCount,
   };
@@ -528,11 +532,91 @@ function buildEmptyDetailedAnalysis(
       quickWin: null,
       oaklinSupport: null,
     })),
+    questionBreakdowns: [],
     radarAvailable: false,
     radarOverall: null,
     radarManager: null,
     radarMember: null,
   };
+}
+
+function computeQuestionDistribution(
+  responses: { questionId: string; score: number }[],
+  questionId: string,
+): ScoreDistributionItem[] {
+  const filtered = responses.filter((r) => r.questionId === questionId);
+  const total = filtered.length;
+  return [1, 2, 3, 4, 5].map((level) => ({
+    level,
+    pct:
+      total > 0
+        ? Math.round(
+            (filtered.filter((r) => Math.round(r.score) === level).length / total) * 100,
+          )
+        : null,
+  }));
+}
+
+function roundedAvg(scores: number[]): number | null {
+  if (scores.length === 0) return null;
+  return Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
+}
+
+function buildQuestionBreakdowns(
+  allResponses: { questionId: string; score: number }[],
+  managerResponses: { questionId: string; score: number }[],
+  memberResponses: { questionId: string; score: number }[],
+  questions: Record<string, Question>,
+): QuestionBreakdown[] {
+  return Object.entries(questions)
+    .map(([qId, q]) => {
+      const allScores = allResponses.filter((r) => r.questionId === qId).map((r) => r.score);
+      const mgrScores = managerResponses.filter((r) => r.questionId === qId).map((r) => r.score);
+      const memScores = memberResponses.filter((r) => r.questionId === qId).map((r) => r.score);
+
+      const overallScore = roundedAvg(allScores);
+      const managerScore = roundedAvg(mgrScores);
+      const memberScore = roundedAvg(memScores);
+
+      const managerCriteriaLabel =
+        managerScore !== null ? (q.criteria[String(Math.round(managerScore))] ?? null) : null;
+      const memberCriteriaLabel =
+        memberScore !== null ? (q.criteria[String(Math.round(memberScore))] ?? null) : null;
+
+      return {
+        questionId: qId,
+        questionText: q.text,
+        questionSubtext: q.subtext,
+        competency: q.competency,
+        order: q.order,
+        criteria: q.criteria,
+        overallScore,
+        managerScore,
+        memberScore,
+        respondentCount: allScores.length,
+        managerCount: mgrScores.length,
+        memberCount: memScores.length,
+        delta:
+          managerScore !== null && memberScore !== null
+            ? Math.round((managerScore - memberScore) * 10) / 10
+            : null,
+        overallDistribution: computeQuestionDistribution(allResponses, qId),
+        managerDistribution: computeQuestionDistribution(managerResponses, qId),
+        memberDistribution: computeQuestionDistribution(memberResponses, qId),
+        managerCriteriaLabel,
+        memberCriteriaLabel,
+      } satisfies QuestionBreakdown;
+    })
+    .sort((a, b) => {
+      const COMP_ORDER: Record<string, number> = {
+        people_relationships: 0,
+        growth_impact: 1,
+        purpose_alignment: 2,
+      };
+      const compDiff = (COMP_ORDER[a.competency] ?? 99) - (COMP_ORDER[b.competency] ?? 99);
+      if (compDiff !== 0) return compDiff;
+      return a.order - b.order;
+    });
 }
 
 function buildCompetencyBreakdown(
@@ -609,6 +693,8 @@ export async function getDetailedAnalysisData(
 
     const computed = await computeScoresFromResponses(engagementId, engagement);
     const memberResponses = computed?.memberResponses ?? [];
+    const managerResponses = computed?.managerResponses ?? [];
+    const allResponses = computed?.allResponses ?? [];
     const questions = computed?.questions ?? {};
     const respondentCount = insights.respondentCount.member;
 
@@ -643,6 +729,12 @@ export async function getDetailedAnalysisData(
         respondentCount,
         insights.benchmarkComparison,
       ),
+      questionBreakdowns: buildQuestionBreakdowns(
+        allResponses,
+        managerResponses,
+        memberResponses,
+        questions,
+      ),
       radarAvailable: true,
       radarOverall: insights.competencyScores,
       radarManager: insights.managerScores,
@@ -655,8 +747,16 @@ export async function getDetailedAnalysisData(
     return buildEmptyDetailedAnalysis(engagementId, team.name);
   }
 
-  const { competencyScores, managerScores, memberScores, memberResponses, questions, memberCount } =
-    computed;
+  const {
+    competencyScores,
+    managerScores,
+    memberScores,
+    memberResponses,
+    managerResponses,
+    allResponses,
+    questions,
+    memberCount,
+  } = computed;
   const overallScore =
     Object.values(competencyScores).reduce((a, b) => a + b, 0) / COMPETENCIES.length;
 
@@ -679,6 +779,12 @@ export async function getDetailedAnalysisData(
       actions,
       DASHBOARD_NOT_AVAILABLE,
       memberCount,
+    ),
+    questionBreakdowns: buildQuestionBreakdowns(
+      allResponses,
+      managerResponses,
+      memberResponses,
+      questions,
     ),
     radarAvailable: true,
     radarOverall: competencyScores,

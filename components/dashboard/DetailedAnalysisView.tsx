@@ -1,10 +1,5 @@
 'use client';
-/**
- * Operational Maturity Assessment — matches the page 5 mockup.
- * Left: compact radar chart. Right: 2-column grid of pillar cards.
- * Each pillar card: left = score + response distribution bars,
- * right = AI insight + quick win + how Oaklin can support.
- */
+
 import { useState } from 'react';
 import Link from 'next/link';
 import type { Competency } from '@/types';
@@ -13,6 +8,7 @@ import {
   DASHBOARD_NOT_AVAILABLE,
   type DetailedAnalysisData,
   type DetailedCompetencyBreakdown,
+  type QuestionBreakdown,
 } from '@/lib/dashboard-types';
 import RadarChartWrapper, { type WrapperDataPoint } from '@/components/charts/RadarChartWrapper';
 
@@ -22,151 +18,147 @@ const COMPETENCY_ICONS: Record<Competency, string> = {
   purpose_alignment: '🎯',
 };
 
-const COMPETENCY_DESCRIPTIONS: Record<Competency, string> = {
-  people_relationships:
-    'How effectively does the team collaborate, communicate, and develop relationships across functions and boundaries?',
-  growth_impact:
-    'How systematically does the organisation support ongoing learning, skill development, and high performance?',
-  purpose_alignment:
-    'How clearly are team members aligned to organisational purpose, strategy, and their individual contribution?',
-};
-
-const LEVEL_LABELS = ['Ad Hoc', 'Informal', 'Defined', 'Managed', 'Optimised'];
-
-const LEVEL_COLORS = [
-  'bg-red-100',
-  'bg-orange-100',
-  'bg-yellow-100',
-  'bg-green-100',
-  'bg-emerald-200',
-];
-
 const COMPETENCIES: Competency[] = [
   'people_relationships',
   'growth_impact',
   'purpose_alignment',
 ];
 
+const LEVEL_LABELS = ['Ad Hoc', 'Informal', 'Defined', 'Managed', 'Optimised'];
+
 function isNA(text: string | null | undefined) {
   return !text || text === DASHBOARD_NOT_AVAILABLE;
 }
 
-// ─── Pillar card ───────────────────────────────────────────────────────────────
-function PillarCard({ pillar }: { pillar: DetailedCompetencyBreakdown }) {
-  const noData = pillar.score === null;
+// ─── Distribution bar row ─────────────────────────────────────────────────────
+function DistributionRow({
+  level,
+  pct,
+  criteriaText,
+  color = 'bg-orbit-forest',
+}: {
+  level: number;
+  pct: number | null;
+  criteriaText?: string;
+  color?: string;
+}) {
+  const label = criteriaText ? `${level} – ${criteriaText}` : `${level} – ${LEVEL_LABELS[level - 1]}`;
+
+  return (
+    <div className="flex items-start gap-2 text-xs">
+      <div className="flex-shrink-0 w-[44%] leading-tight text-gray-600 pr-1">
+        {label}
+      </div>
+      <div className="flex-1 flex items-center gap-2 min-w-0">
+        <div className="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+          <div
+            className={`h-full rounded transition-all ${color}`}
+            style={{ width: pct !== null ? `${pct}%` : '0%' }}
+          />
+        </div>
+        <span className="w-8 text-right text-gray-500 tabular-nums flex-shrink-0">
+          {pct !== null ? `${pct}%` : '—'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Question card ─────────────────────────────────────────────────────────────
+function QuestionCard({
+  question,
+  breakdown,
+}: {
+  question: QuestionBreakdown;
+  breakdown: DetailedCompetencyBreakdown | undefined;
+}) {
+  const noData = question.overallScore === null;
+  const respondentLabel =
+    question.respondentCount > 0
+      ? `Total: ${question.respondentCount} respondent${question.respondentCount !== 1 ? 's' : ''}`
+      : '';
 
   return (
     <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white flex flex-col">
-      {/* Dark green header */}
-      <div className="bg-orbit-forest px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{COMPETENCY_ICONS[pillar.competency]}</span>
-          <span className="text-sm font-bold text-white">
-            {COMPETENCY_LABELS[pillar.competency]}
-          </span>
+      {/* Card header row */}
+      <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-orbit-dark leading-snug">
+            {question.questionSubtext ?? question.questionText}
+          </p>
+          {question.questionSubtext && (
+            <p className="text-xs text-gray-500 mt-0.5 leading-snug">{question.questionText}</p>
+          )}
         </div>
-        {pillar.score !== null && (
-          <span className="text-sm font-bold text-green-200">{pillar.score.toFixed(1)}</span>
+        {!noData && (
+          <span className="flex-shrink-0 text-xl font-bold text-orbit-forest leading-none pt-0.5">
+            {question.overallScore!.toFixed(1)}
+          </span>
         )}
       </div>
 
       {/* Body: two columns */}
       <div className="flex flex-1 divide-x divide-gray-100">
-        {/* ── Left: score breakdown + distribution ── */}
-        <div className="w-[55%] flex-shrink-0 px-4 py-4 space-y-3">
-          {/* Scores */}
-          <div>
-            <div className="flex items-baseline justify-between mb-1">
-              <p className="text-xs font-bold text-orbit-dark">
-                {COMPETENCY_LABELS[pillar.competency]}
-              </p>
-              <span
-                className={[
-                  'font-bold',
-                  noData ? 'text-xs text-gray-400 italic' : 'text-base text-orbit-forest',
-                ].join(' ')}
-              >
-                {noData ? DASHBOARD_NOT_AVAILABLE : pillar.score!.toFixed(1)}
-              </span>
-            </div>
-            <p className="text-2xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-              Assessment Area
-            </p>
-            <p className="text-xs text-gray-600 leading-snug">
-              {COMPETENCY_DESCRIPTIONS[pillar.competency]}
-            </p>
-          </div>
 
-          {/* Manager / Member breakdown */}
-          {!noData && (
+        {/* ── Left: scores + distribution ── */}
+        <div className="w-[52%] flex-shrink-0 px-4 py-4 space-y-3">
+
+          {/* Manager / Member score pills */}
+          {!noData && (question.managerScore !== null || question.memberScore !== null) && (
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-green-50 rounded px-2 py-1.5">
-                <p className="text-2xs text-gray-500">Manager</p>
-                <p className="text-sm font-bold text-orbit-forest">
-                  {pillar.managerScore?.toFixed(1) ?? '—'}
-                </p>
-              </div>
-              <div className="bg-amber-50 rounded px-2 py-1.5">
-                <p className="text-2xs text-gray-500">Members</p>
-                <p className="text-sm font-bold text-orbit-amber">
-                  {pillar.memberScore?.toFixed(1) ?? '—'}
-                </p>
-              </div>
+              {question.managerScore !== null && (
+                <div className="bg-green-50 rounded px-2 py-1.5">
+                  <p className="text-2xs text-gray-500">Manager</p>
+                  <p className="text-sm font-bold text-orbit-forest">{question.managerScore.toFixed(1)}</p>
+                  {question.managerCriteriaLabel && (
+                    <p className="text-2xs text-gray-500 mt-0.5 leading-snug line-clamp-2">
+                      {question.managerCriteriaLabel}
+                    </p>
+                  )}
+                </div>
+              )}
+              {question.memberScore !== null && (
+                <div className="bg-amber-50 rounded px-2 py-1.5">
+                  <p className="text-2xs text-gray-500">Members</p>
+                  <p className="text-sm font-bold text-orbit-amber">{question.memberScore.toFixed(1)}</p>
+                  {question.memberCriteriaLabel && (
+                    <p className="text-2xs text-gray-500 mt-0.5 leading-snug line-clamp-2">
+                      {question.memberCriteriaLabel}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Distribution */}
+          {/* Response Distribution */}
           <div>
             <p className="text-2xs font-semibold text-gray-500 mb-2">
               Response Distribution
-              {pillar.respondentCount > 0 && (
-                <span className="font-normal text-gray-400">
-                  {' '}(Total: {pillar.respondentCount} respondent{pillar.respondentCount !== 1 ? 's' : ''})
-                </span>
+              {respondentLabel && (
+                <span className="font-normal text-gray-400"> ({respondentLabel})</span>
               )}:
             </p>
             <div className="space-y-1.5">
-              {pillar.distribution.map(({ level, pct }) => (
-                <div key={level} className="flex items-center gap-1.5">
-                  <div className="text-2xs text-gray-500 w-[44%] leading-tight flex-shrink-0 truncate">
-                    <span className="font-semibold">{level}</span>
-                    {' — '}
-                    {LEVEL_LABELS[level - 1]}
-                  </div>
-                  <div className="flex-1 h-3.5 bg-gray-100 rounded overflow-hidden">
-                    <div
-                      className={`h-full rounded transition-all ${LEVEL_COLORS[level - 1]}`}
-                      style={{ width: pct !== null ? `${pct}%` : '0%' }}
-                    />
-                  </div>
-                  <span className="text-2xs text-gray-500 w-7 text-right flex-shrink-0 tabular-nums">
-                    {pct !== null ? `${pct}%` : '—'}
-                  </span>
-                </div>
+              {question.overallDistribution.map(({ level, pct }) => (
+                <DistributionRow
+                  key={level}
+                  level={level}
+                  pct={pct}
+                  criteriaText={question.criteria[String(level)]}
+                  color={
+                    level <= 2 ? 'bg-red-300' :
+                    level === 3 ? 'bg-amber-300' :
+                    level === 4 ? 'bg-orbit-green' :
+                    'bg-orbit-forest'
+                  }
+                />
               ))}
             </div>
           </div>
-
-          {/* Benchmark if available */}
-          {pillar.industryAverage !== null && (
-            <div className="pt-2 border-t border-gray-100 grid grid-cols-2 gap-2 text-2xs text-gray-500">
-              <div>
-                <span className="block text-gray-400">Industry avg</span>
-                <span className="font-semibold text-orbit-dark">
-                  {pillar.industryAverage.toFixed(1)}
-                </span>
-              </div>
-              <div>
-                <span className="block text-gray-400">Best in class</span>
-                <span className="font-semibold text-orbit-green">
-                  {pillar.bestInClass?.toFixed(1) ?? '—'}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* ── Right: AI sections ── */}
+        {/* ── Right: AI insight, quick win, Oaklin support ── */}
         <div className="flex-1 px-4 py-4 space-y-4 bg-gray-50/60">
           {/* INSIGHT */}
           <div>
@@ -175,12 +167,10 @@ function PillarCard({ pillar }: { pillar: DetailedCompetencyBreakdown }) {
             </p>
             <p
               className={`text-xs leading-relaxed ${
-                isNA(pillar.aiInsight)
-                  ? 'text-gray-400 italic'
-                  : 'text-gray-700'
+                isNA(breakdown?.aiInsight) ? 'text-gray-400 italic' : 'text-gray-700'
               }`}
             >
-              {pillar.aiInsight}
+              {breakdown?.aiInsight ?? DASHBOARD_NOT_AVAILABLE}
             </p>
           </div>
 
@@ -189,13 +179,13 @@ function PillarCard({ pillar }: { pillar: DetailedCompetencyBreakdown }) {
             <p className="text-2xs font-bold text-orbit-green uppercase tracking-wide flex items-center gap-1 mb-1.5">
               🚀 Quick Win
             </p>
-            {pillar.quickWin ? (
+            {breakdown?.quickWin && !isNA(breakdown.quickWin.title) ? (
               <>
                 <p className="text-xs font-semibold text-orbit-dark leading-snug">
-                  {pillar.quickWin.title}
+                  {breakdown.quickWin.title}
                 </p>
                 <p className="text-xs text-gray-600 mt-0.5 leading-snug">
-                  {pillar.quickWin.description}
+                  {breakdown.quickWin.description}
                 </p>
               </>
             ) : (
@@ -208,9 +198,9 @@ function PillarCard({ pillar }: { pillar: DetailedCompetencyBreakdown }) {
             <p className="text-2xs font-bold text-orbit-forest uppercase tracking-wide flex items-center gap-1 mb-1.5">
               → How Oaklin Can Support
             </p>
-            {pillar.oaklinSupport ? (
+            {breakdown?.oaklinSupport && !isNA(breakdown.oaklinSupport.title) ? (
               <p className="text-xs text-gray-600 leading-snug">
-                {pillar.oaklinSupport.description}
+                {breakdown.oaklinSupport.description}
               </p>
             ) : (
               <p className="text-xs text-gray-400 italic">{DASHBOARD_NOT_AVAILABLE}</p>
@@ -241,6 +231,7 @@ export default function DetailedAnalysisView({
     overallScore,
     maturityLabel,
     competencyBreakdown,
+    questionBreakdowns,
     radarAvailable,
     radarOverall,
     radarManager,
@@ -258,10 +249,24 @@ export default function DetailedAnalysisView({
         }))
       : null;
 
-  const visiblePillars =
+  const visibleQuestions =
     selectedPillar === 'all'
-      ? competencyBreakdown
-      : competencyBreakdown.filter((p) => p.competency === selectedPillar);
+      ? questionBreakdowns
+      : questionBreakdowns.filter((q) => q.competency === selectedPillar);
+
+  // Group visible questions by competency
+  const grouped = COMPETENCIES.reduce<Record<Competency, QuestionBreakdown[]>>(
+    (acc, c) => {
+      acc[c] = visibleQuestions.filter((q) => q.competency === c);
+      return acc;
+    },
+    { people_relationships: [], growth_impact: [], purpose_alignment: [] },
+  );
+
+  const competenciesToShow =
+    selectedPillar === 'all'
+      ? COMPETENCIES.filter((c) => grouped[c].length > 0)
+      : ([selectedPillar] as Competency[]);
 
   return (
     <div className="space-y-5">
@@ -276,8 +281,7 @@ export default function DetailedAnalysisView({
             Operational Maturity Assessment
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Detailed breakdown of operational maturity competencies and components with
-            response distribution analysis
+            Detailed breakdown of operational maturity competencies with response distribution analysis
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -316,8 +320,9 @@ export default function DetailedAnalysisView({
         </div>
       )}
 
-      {/* Main layout: radar left + pillar grid right */}
+      {/* Main layout: radar left + question cards right */}
       <div className="flex gap-4 items-start">
+
         {/* Radar — compact left panel */}
         <div className="hidden lg:flex flex-col gap-3 w-52 flex-shrink-0">
           <div className="rounded-xl bg-white border border-gray-200 shadow-sm overflow-hidden">
@@ -358,13 +363,85 @@ export default function DetailedAnalysisView({
               />
             </div>
           </div>
+
+          {/* Competency scores legend */}
+          <div className="rounded-xl bg-white border border-gray-200 shadow-sm px-4 py-4 space-y-3">
+            <p className="text-2xs font-semibold text-gray-500 uppercase tracking-wide">
+              Pillar Scores
+            </p>
+            {COMPETENCIES.map((c) => {
+              const bd = competencyBreakdown.find((b) => b.competency === c);
+              return (
+                <div key={c}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-gray-500">{COMPETENCY_ICONS[c]} {COMPETENCY_LABELS[c]}</span>
+                    <span className="font-bold text-orbit-forest">
+                      {bd?.score?.toFixed(1) ?? '—'}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-1.5 bg-orbit-forest rounded-full"
+                      style={{ width: bd?.score ? `${(bd.score / 5) * 100}%` : '0%' }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Pillar cards grid */}
-        <div className="flex-1 grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {visiblePillars.map((pillar) => (
-            <PillarCard key={pillar.competency} pillar={pillar} />
-          ))}
+        {/* Question cards — grouped by competency */}
+        <div className="flex-1 space-y-8 min-w-0">
+          {questionBreakdowns.length === 0 ? (
+            <div className="rounded-xl bg-white border border-gray-200 px-8 py-16 text-center">
+              <p className="text-sm text-gray-500">
+                No survey responses yet. Question-level breakdowns will appear once respondents have completed the survey.
+              </p>
+            </div>
+          ) : (
+            competenciesToShow.map((competency) => {
+              const questions = grouped[competency];
+              if (questions.length === 0) return null;
+              const bd = competencyBreakdown.find((b) => b.competency === competency);
+
+              return (
+                <div key={competency} className="space-y-3">
+                  {/* Competency section header */}
+                  <div className="flex items-center gap-3 px-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{COMPETENCY_ICONS[competency]}</span>
+                      <h2 className="text-base font-bold text-orbit-dark">
+                        {COMPETENCY_LABELS[competency]}
+                      </h2>
+                    </div>
+                    {bd?.score !== null && bd?.score !== undefined && (
+                      <span className="text-sm font-bold text-orbit-forest bg-green-50 px-2 py-0.5 rounded">
+                        {bd.score.toFixed(1)}
+                      </span>
+                    )}
+                    {bd?.industryAverage !== null && bd?.industryAverage !== undefined && (
+                      <span className="text-xs text-gray-500">
+                        vs industry avg {bd.industryAverage.toFixed(1)}
+                        {bd.delta !== null && (
+                          <span className={bd.delta >= 0 ? 'text-orbit-green font-semibold' : 'text-red-600 font-semibold'}>
+                            {' '}({bd.delta >= 0 ? '+' : ''}{bd.delta.toFixed(1)})
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Question cards */}
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                    {questions.map((q) => (
+                      <QuestionCard key={q.questionId} question={q} breakdown={bd} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
