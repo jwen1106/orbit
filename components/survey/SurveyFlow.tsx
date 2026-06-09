@@ -39,10 +39,8 @@ export default function SurveyFlow({
   // Track the respondent id; for shared-link users the server creates it on the first
   // answer and returns it, so we must capture and reuse it for subsequent saves.
   const [currentRespondentId, setCurrentRespondentId] = useState<string | null>(respondentId);
-  // Skip name capture if name was pre-filled from landing page, or if manager/individual invite
-  const [nameSubmitted, setNameSubmitted] = useState(
-    !!(preName) || role === 'manager' || accessMethod === 'email_invite',
-  );
+  // Skip name capture only if name was pre-filled from landing page
+  const [nameSubmitted, setNameSubmitted] = useState(!!(preName));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 

@@ -6,10 +6,9 @@ import Link from 'next/link';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 import CompletionDonut from '@/components/admin/CompletionDonut';
-import InviteeAccessList from '@/components/admin/InviteeAccessList';
+import SurveyResponsesList from '@/components/admin/SurveyResponsesList';
 import type { Engagement, Respondent, Question, Competency } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
 
@@ -31,9 +30,6 @@ export default function EngagementDetailPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteName, setInviteName] = useState('');
-  const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState<'member' | 'manager' | null>(null);
   const [error, setError] = useState('');
   const [editingTitle, setEditingTitle] = useState(false);
@@ -89,30 +85,6 @@ export default function EngagementDetailPage() {
       setError(err instanceof Error ? err.message : 'Error');
     } finally {
       setActionLoading('');
-    }
-  }
-
-  async function sendInvite(e: React.FormEvent) {
-    e.preventDefault();
-    setInviteLoading(true);
-    setError('');
-    try {
-      const res = await fetch(`/api/admin/engagements/${id}/invite`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: inviteName, email: inviteEmail }),
-      });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error ?? 'Failed');
-      }
-      setInviteEmail('');
-      setInviteName('');
-      await load();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error');
-    } finally {
-      setInviteLoading(false);
     }
   }
 
@@ -205,9 +177,6 @@ export default function EngagementDetailPage() {
     ? Math.round((memberCompleted / memberTotal) * 100)
     : 0;
   const managerComplete = managerRespondents.some((r) => r.status === 'completed');
-  const emailInvitees = data.respondents.filter(
-    (r) => r.role === 'member' && r.accessMethod === 'email_invite',
-  );
 
   return (
     <div className="space-y-6">
@@ -408,40 +377,11 @@ export default function EngagementDetailPage() {
             </div>
           </div>
 
-          {data.status === 'active' && (
-            <div className="mt-5 pt-4 border-t border-gray-100">
-              <h3 className="text-sm font-bold text-orbit-dark mb-3">Send individual invitation</h3>
-              <form onSubmit={sendInvite} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    label="Name"
-                    value={inviteName}
-                    onChange={(e) => setInviteName(e.target.value)}
-                    placeholder="Team member's name"
-                    required
-                  />
-                  <Input
-                    label="Email"
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="member@org.com"
-                    required
-                  />
-                </div>
-                <Button type="submit" loading={inviteLoading} size="sm">
-                  Send invite
-                </Button>
-              </form>
-            </div>
-          )}
-
           {data.status !== 'draft' && (
-            <InviteeAccessList
+            <SurveyResponsesList
               engagementId={id}
-              invitees={emailInvitees}
+              respondents={data.respondents}
               onUpdated={load}
-              readOnly={data.status !== 'active'}
             />
           )}
         </Card>
