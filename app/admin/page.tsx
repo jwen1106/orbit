@@ -2,54 +2,85 @@ import { adminDb } from '@/lib/firebase-admin';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Link from 'next/link';
-import type { Engagement, Team, Organisation, Insights } from '@/types';
+import type { Engagement, Team, Organisation } from '@/types';
 import { COMPETENCY_LABELS } from '@/types';
 import AdminCsvExport from '@/components/admin/AdminCsvExport';
 
 async function getDashboardData() {
+  // Fetch all collections without orderBy to avoid index requirements
   const [orgsSnap, teamsSnap, engSnap, insightsSnap] = await Promise.all([
-    adminDb.collection('organisations').orderBy('name').get(),
-    adminDb.collection('teams').orderBy('name').get(),
-    adminDb.collection('engagements').orderBy('createdAt', 'desc').get(),
+    adminDb.collection('organisations').get(),
+    adminDb.collection('teams').get(),
+    adminDb.collection('engagements').get(),
     adminDb.collection('insights').get(),
   ]);
 
-  const orgs: Record<string, Organisation> = {};
-  orgsSnap.docs.forEach((d) => { orgs[d.id] = { id: d.id, ...d.data() } as Organisation; });
-  const teams: Record<string, Team> = {};
-  teamsSnap.docs.forEach((d) => { teams[d.id] = { id: d.id, ...d.data() } as Team; });
-  const insightsMap: Record<string, Insights> = {};
-  insightsSnap.docs.forEach((d) => { insightsMap[d.id] = d.data() as Insights; });
+  const orgsMap: Record<string, Organisation> = {};
+  orgsSnap.docs.forEach((d) => {
+    orgsMap[d.id] = { id: d.id, ...d.data() } as Organisation;
+  });
 
-  const engagements = engSnap.docs.map((d) => {
-    const eng = { id: d.id, ...d.data() } as Engagement;
-    const insights = insightsMap[eng.id];
+  const teamsMap: Record<string, Team> = {};
+  teamsSnap.docs.forEach((d) => {
+    teamsMap[d.id] = { id: d.id, ...d.data() } as Team;
+  });
+
+  const insightsMap: Record<string, Record<string, number>> = {};
+  insightsSnap.docs.forEach((d) => {
+    const data = d.data();
+    if (data?.competencyScores) {
+      insightsMap[d.id] = data.competencyScores as Record<string, number>;
+    }
+  });
+
+  // Sort engagements by createdAt descending (client-side to avoid index requirement)
+  const rawEngagements = engSnap.docs
+    .map((d) => ({ id: d.id, ...d.data() }) as Engagement)
+    .sort((a, b) => {
+      const aTime = (a.createdAt as { seconds?: number })?.seconds ?? 0;
+      const bTime = (b.createdAt as { seconds?: number })?.seconds ?? 0;
+      return bTime - aTime;
+    });
+
+  const engagements = rawEngagements.map((eng) => {
+    const scores = insightsMap[eng.id] ?? null;
     return {
-      ...eng,
-      teamName: teams[eng.teamId]?.name ?? '—',
-      orgName: orgs[eng.organisationId]?.name ?? '—',
-      industry: orgs[eng.organisationId]?.industry ?? '—',
-      scores: insights?.competencyScores ?? null,
+      id: eng.id,
+      teamId: eng.teamId,
+      organisationId: eng.organisationId,
+      status: eng.status,
+      teamName: teamsMap[eng.teamId]?.name ?? '—',
+      orgName: orgsMap[eng.organisationId]?.name ?? '—',
+      industry: orgsMap[eng.organisationId]?.industry ?? '—',
+      scores,
     };
   });
 
-  return {
-    orgs: orgsSnap.docs.map((d) => ({ id: d.id, name: (d.data() as Organisation).name })),
-    teams: teamsSnap.docs.map((d) => {
+  // Sort orgs and teams alphabetically
+  const orgs = orgsSnap.docs
+    .map((d) => ({ id: d.id, name: (d.data() as Organisation).name ?? '' }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const teams = teamsSnap.docs
+    .map((d) => {
       const t = d.data() as Team;
-      return { id: d.id, name: t.name, orgId: t.organisationId ?? '' };
-    }),
-    engagements,
-    stats: {
-      organisations: orgsSnap.size,
-      teams: teamsSnap.size,
-      active: engagements.filter((e) => e.status === 'active').length,
-      analysed: engagements.filter((e) => e.status === 'analysed').length,
-      draft: engagements.filter((e) => e.status === 'draft').length,
-      total: engagements.length,
-    },
+      return { id: d.id, name: t.name ?? '', orgId: t.organisationId ?? '' };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const stats = {
+    organisations: orgsSnap.size,
+    teams: teamsSnap.size,
+    total: engSnap.size,
+    active: rawEngagements.filter((e) => e.status === 'active').length,
+    analysed: rawEngagements.filter((e) => e.status === 'analysed').length,
+    draft: rawEngagements.filter((e) => e.status === 'draft').length,
   };
+
+  return { orgs, teams, engagements, stats };
 }
+
+const COMPETENCIES = ['people_relationships', 'growth_impact', 'purpose_alignment'] as const;
 
 export default async function AdminDashboard() {
   const { orgs, teams, engagements, stats } = await getDashboardData();
@@ -69,7 +100,7 @@ export default async function AdminDashboard() {
         <p className="text-sm text-gray-500 mt-1">Orbit platform management</p>
       </div>
 
-      {/* Top stats */}
+      {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         {[
           { label: 'Organisations', value: stats.organisations, color: 'text-orbit-forest' },
@@ -133,7 +164,7 @@ export default async function AdminDashboard() {
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Team</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Industry</th>
                 <th className="px-6 py-3 text-left font-semibold text-gray-600">Status</th>
-                {(['people_relationships', 'growth_impact', 'purpose_alignment'] as const).map((c) => (
+                {COMPETENCIES.map((c) => (
                   <th key={c} className="px-4 py-3 text-center font-semibold text-gray-600 text-xs">
                     {COMPETENCY_LABELS[c]}
                   </th>
@@ -160,9 +191,9 @@ export default async function AdminDashboard() {
                     <td className="px-6 py-3">
                       <Badge variant={eng.status} />
                     </td>
-                    {(['people_relationships', 'growth_impact', 'purpose_alignment'] as const).map((c) => (
+                    {COMPETENCIES.map((c) => (
                       <td key={c} className="px-4 py-3 text-center font-bold text-orbit-forest">
-                        {eng.scores ? eng.scores[c].toFixed(1) : '—'}
+                        {eng.scores?.[c] != null ? (eng.scores[c] as number).toFixed(1) : '—'}
                       </td>
                     ))}
                     <td className="px-6 py-3 text-right whitespace-nowrap">
