@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
       accessMethod,
       role,
       name,
+      email,
       questionId,
       score,
       isFirst,
@@ -48,8 +49,10 @@ export async function POST(req: NextRequest) {
       const newRespondent = await engRef.collection('respondents').add({
         engagementId,
         role,
-        name: name ?? (role === 'manager' ? 'Manager' : 'Member'),
-        email: null,
+        name: (typeof name === 'string' && name.trim())
+          ? name.trim()
+          : (role === 'manager' ? 'Manager' : 'Member'),
+        email: (typeof email === 'string' && email.trim()) ? email.trim() : null,
         inviteToken: generateToken(20),
         accessMethod,
         status: 'in_progress',
@@ -59,11 +62,13 @@ export async function POST(req: NextRequest) {
       });
       resolvedRespondentId = newRespondent.id;
     } else if (isFirst && respondentId) {
-      await engRef.collection('respondents').doc(respondentId).update({
+      const update: Record<string, unknown> = {
         status: 'in_progress',
         startedAt: FieldValue.serverTimestamp(),
-        name: name ?? undefined,
-      });
+      };
+      if (typeof name === 'string' && name.trim()) update.name = name.trim();
+      if (typeof email === 'string' && email.trim()) update.email = email.trim();
+      await engRef.collection('respondents').doc(respondentId).update(update);
     }
 
     if (!resolvedRespondentId) {

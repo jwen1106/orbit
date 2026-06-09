@@ -36,6 +36,9 @@ export default function SurveyFlow({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [name, setName] = useState(preName);
+  // Track the respondent id; for shared-link users the server creates it on the first
+  // answer and returns it, so we must capture and reuse it for subsequent saves.
+  const [currentRespondentId, setCurrentRespondentId] = useState<string | null>(respondentId);
   // Skip name capture if name was pre-filled from landing page, or if manager/individual invite
   const [nameSubmitted, setNameSubmitted] = useState(
     !!(preName) || role === 'manager' || accessMethod === 'email_invite',
@@ -61,24 +64,35 @@ export default function SurveyFlow({
       return;
     }
     setError('');
+    const isFirst = currentIndex === 0;
 
-    // Save answer to server
+    // Save answer to server. On the first question the server may create the
+    // respondent and return its id — capture it so later saves use the same record.
+    let respId = currentRespondentId;
     try {
-      await fetch('/api/survey/respond', {
+      const res = await fetch('/api/survey/respond', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           engagementId,
-          respondentId,
+          respondentId: currentRespondentId,
           token,
           accessMethod,
           role,
-          name: nameSubmitted ? undefined : name,
+          name: isFirst && name.trim() ? name.trim() : undefined,
+          email: isFirst && preEmail.trim() ? preEmail.trim() : undefined,
           questionId: current.id,
           score: answers[current.id],
-          isFirst: currentIndex === 0,
+          isFirst,
         }),
       });
+      const data = await res.json().catch(() => null);
+      if (data?.respondentId) {
+        respId = data.respondentId;
+        if (data.respondentId !== currentRespondentId) {
+          setCurrentRespondentId(data.respondentId);
+        }
+      }
     } catch {
       // Don't block on save errors — continue
     }
@@ -89,7 +103,7 @@ export default function SurveyFlow({
         const res = await fetch('/api/survey/complete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ engagementId, respondentId, token, role }),
+          body: JSON.stringify({ engagementId, respondentId: respId, token, role }),
         });
         if (res.ok) router.push('/survey/complete');
         else setError('Error saving your responses. Please try again.');
